@@ -4,6 +4,8 @@ const app=express();
 const path = require('path');
 const serv=require('http').Server(app);
 const socketIO = require('socket.io');
+const session = require('express-session');
+var sessions={};
 
 /*
   Set up middleware function between these two paths
@@ -11,6 +13,14 @@ const socketIO = require('socket.io');
   css, etc stuff.
 */
 app.use("/client", express.static(__dirname+"/client"));
+app.set('trust proxy', 1); // trust first proxy
+app.use(session({
+  secret: 'keyboard cat',
+  resave: true,
+  rolling: true,
+  saveUninitialized: true,
+  cookie: { maxAge: 60000 }
+  }));
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "/client"));
 
@@ -19,7 +29,17 @@ app.set("views", path.join(__dirname, "/client"));
 */
 
 app.get("/", function(req, res){
-    res.render("test");
+  var currSession=req.session;
+  console.log("kiy"+currSession.id);
+  console.log(req.session.name);
+  if(req.session.name==null){
+    req.session.name="nome";
+    //sessions[req.session]="hi";
+    console.log("hi new user");
+  }else{
+    console.log("Welcome back!!!",sessions[req.session]);
+  }
+  res.render("test");
 });
 
 /*
@@ -37,13 +57,31 @@ serv.listen(5000, function(){
 var players={};
 var rooms={};
 
+function validLinkID(){
+  var id=Math.floor((Math.random() * 999999) + 111111);
+  if(rooms[id]==null){
+    rooms[id]=id;
+    return id;
+  }
+  return validLinkID();
+}
+
 var io = socketIO(serv);
 io.sockets.on("connection",function(socket){
   console.log("connected");
+  socket.emit("hello","x");
   socket.emit("roomUpdate",rooms);
   socket.on("roast",function(data){
     console.log("you look like a thumb");
   });
+  var uniqueId=validLinkID();
+  socket.emit("uniqueLinkID", uniqueId);
+  app.post("/room"+uniqueId, function(req, res){
+    console.log("uniqueID:",uniqueId);
+    console.log("req:", req.roomName.value);
+    console.log("res:", res.roomName.value);
+    res.render("room");
+  })
   socket.on("newRoom",function(data){
     console.log(data.masterName+" has connected.");
     app.get("/newpage"+data.roomId, function(req, res){
