@@ -69,23 +69,17 @@ function validLinkID(){
 var io = socketIO(serv);
 io.sockets.on("connection",function(socket){
   console.log("connected");
-  socket.emit("hello","x");
   socket.emit("roomUpdate",rooms);
   socket.on("roast",function(data){
     console.log("you look like a thumb");
   });
-  var uniqueId=validLinkID();
-  socket.emit("uniqueLinkID", uniqueId);
-  app.post("/room"+uniqueId, function(req, res){
-    console.log("uniqueID:",uniqueId);
-    console.log("req:", req.roomName.value);
-    console.log("res:", res.roomName.value);
-    res.render("room");
-  })
-  socket.on("newRoom",function(data){
+  socket.on("newRoom",function(data, callback){
+    var uniqueID=validLinkID();
+    callback(uniqueID);
+    console.log(uniqueID);
     console.log(data.masterName+" has connected.");
-    app.get("/newpage"+data.roomId, function(req, res){
-        new Room(data.roomId, data.roomName, new Player(data.masterName,true), data.max);
+    app.get("/room"+uniqueID, function(req, res){
+        new Room(uniqueID, data.roomName, data.roomPass,new Player(data.masterName,true), data.numOfPlayers);
         res.render("room");
         socket.emit("playerUpdate",players);
     });
@@ -102,9 +96,10 @@ Player=function(name, inGame){
   players[name]=this;
 }
 
-Room=function(id, name, master, maxPlayers){
+Room=function(id, name, pass, master, maxPlayers){
   this.id=id;
   this.name=name;
+  this.pass=pass;
   this.master=master;
   rooms[id]=this;
 }

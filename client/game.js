@@ -23,9 +23,21 @@ window.onload=function(){
     roomPrompt.style.display="initial";
   }
   document.getElementById("createRoom").onclick=function(){
-    var roomName=document.getElementById("roomName");
-    var roomPass=document.getElementById("roomPass");
+    if(name==null)promptName();
+    var roomName=document.getElementById("roomNameInput");
+    var roomPass=document.getElementById("roomPassInput");
     var numOfPlayers=document.getElementById("numOfPlayers");
+    var dataObj={
+      "masterName":name,
+      "roomName":roomName.value,
+      "roomPass":roomPass.value,
+      "numOfPlayers":numOfPlayers.value
+    };
+    socket.emit("newRoom",dataObj,function(data){
+      console.log("This should be the unique ID:", data);
+      window.location.href="/room"+data;
+    });
+    console.log(roomName.value, roomPass.value, numOfPlayers.value);
   }
   document.getElementById("cancelRoom").onclick=function(){
     roomPrompt.style.display="none";
