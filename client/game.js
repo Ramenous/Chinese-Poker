@@ -28,10 +28,10 @@ window.onload=function(){
     var roomPass=document.getElementById("roomPassInput");
     var numOfPlayers=document.getElementById("numOfPlayers");
     var dataObj={
-      "masterName":name,
-      "roomName":roomName.value,
-      "roomPass":roomPass.value,
-      "numOfPlayers":numOfPlayers.value
+      masterName:name,
+      roomName:roomName.value,
+      roomPass:roomPass.value,
+      numOfPlayers:numOfPlayers.value
     };
     socket.emit("newRoom",dataObj,function(data){
       console.log("This should be the unique ID:", data);
@@ -42,7 +42,7 @@ window.onload=function(){
   document.getElementById("cancelRoom").onclick=function(){
     roomPrompt.style.display="none";
   }
-  socket.on("roomUpdate",function (data){
+  socket.on("obtainRooms",function (data){
     for(var id in data){
       var node = document.createElement("LI");
       var roomName = document.createTextNode(data[id].name);

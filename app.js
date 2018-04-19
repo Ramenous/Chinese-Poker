@@ -30,11 +30,8 @@ app.set("views", path.join(__dirname, "/client"));
 
 app.get("/", function(req, res){
   var currSession=req.session;
-  console.log("kiy"+currSession.id);
-  console.log(req.session.name);
-  if(req.session.name==null){
-    req.session.name="nome";
-    //sessions[req.session]="hi";
+  if(sessions[currSession.id]==null){
+    sessions[currSession.id]=currSession;
     console.log("hi new user");
   }else{
     console.log("Welcome back!!!",sessions[req.session]);
@@ -69,7 +66,7 @@ function validLinkID(){
 var io = socketIO(serv);
 io.sockets.on("connection",function(socket){
   console.log("connected");
-  socket.emit("roomUpdate",rooms);
+  socket.emit("obtainRooms",rooms);
   socket.on("roast",function(data){
     console.log("you look like a thumb");
   });
@@ -79,20 +76,21 @@ io.sockets.on("connection",function(socket){
     console.log(uniqueID);
     console.log(data.masterName+" has connected.");
     app.get("/room"+uniqueID, function(req, res){
-        new Room(uniqueID, data.roomName, data.roomPass,new Player(data.masterName,true), data.numOfPlayers);
-        res.render("room");
-        socket.emit("playerUpdate",players);
+      console.log("params",req.params);
+      var currSessionID=req.session.id;
+      var master=new Player(data.masterName,true, currSessionID);
+      sessions[currSessionID].room=new Room(uniqueID, data.roomName, data.roomPass,master, data.numOfPlayers);
+      res.render("room", {id: uniqueID});
+      socket.emit("playerUpdate",players);
     });
   });
-
-
-
 });
 
 
-Player=function(name, inGame){
+Player=function(name, inGame, sessionID){
   this.name=name;
   this.inGame=inGame;
+  this.sessionID=sessionID;
   players[name]=this;
 }
 
@@ -101,5 +99,7 @@ Room=function(id, name, pass, master, maxPlayers){
   this.name=name;
   this.pass=pass;
   this.master=master;
+  this.players=[];
+  this.players.push(master);
   rooms[id]=this;
 }
