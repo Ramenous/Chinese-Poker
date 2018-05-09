@@ -43,11 +43,23 @@ window.onload=function(){
     roomPrompt.style.display="none";
   }
   socket.on("obtainRooms",function (data){
-    for(var id in data){
+    for(var room in data){
       var node = document.createElement("LI");
-      var roomName = document.createTextNode(data[id].name);
+      var roomName = document.createTextNode(room.name);
       node.appendChild(roomName);
+      var join = document.createElement("BUTTON");
+      join.innerHTML="Join Room";
+      join.onclick=function(){
+        if(name==null)promptName();
+        var dataObj={
+          playerName:name,
+          room: room.id
+        }
+        socket.emit("joinRoom", dataObj);
+        window.location.href="/room"+room.id;
+      }
       document.getElementById("roomList").appendChild(node);
+
     }
   });
 }

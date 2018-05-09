@@ -78,18 +78,30 @@ io.sockets.on("connection",function(socket){
     app.get("/room"+uniqueID, function(req, res){
       console.log("params",req.params);
       var currSessionID=req.session.id;
-      var master=new Player(data.masterName,true, currSessionID);
+      var master=new Player(data.masterName, currSessionID);
       sessions[currSessionID].room=new Room(uniqueID, data.roomName, data.roomPass,master, data.numOfPlayers);
-      res.render("room", {id: uniqueID});
+      res.render("room", {id: uniqueID, sessionID: currSessionID});
       socket.emit("playerUpdate",players);
     });
   });
+  socket.on("joinRoom", function(data){
+    console.log("requested join room is room: "+data);
+    var id=data.room;
+    var currSessionID=req.session.id;
+    app.get("/room"+data.room, function(req, res){
+      var player = (players[data.playerName]==null) ? new Player(data.playerName, currSessionID): players[data.playerName];
+      rooms[data.room].players.push(player);
+      res.render("room",  {id: data.room, sessionID: currSessionID});
+    }
+  });
+  socket.on("obtainRoomData", function(data, callback){
+      callback(rooms[parseInt(data)]);
+  })
 });
 
-
-Player=function(name, inGame, sessionID){
+Player=function(name, sessionID){
   this.name=name;
-  this.inGame=inGame;
+  this.inGame=true;
   this.sessionID=sessionID;
   players[name]=this;
 }
