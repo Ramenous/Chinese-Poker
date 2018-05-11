@@ -2,28 +2,61 @@ var socket = io();
 var name, rooms;
 var roomNames=[
   "Let's play!",
+  "Poker time!",
 ];
-socket.emit("roast");
-console.log("hi");
 
-createNewRoom=function(){
-  if(name==null)promptName();
-  maxPlayers=prompt("enter the amount of players (1-4)");
-  const id=Math.floor((Math.random() * 999999) + 111111);
-  window.location.href = '/newpage';
-  socket.emit("newRoom", {roomName:"x",masterName:name, roomId:id, max:maxPlayers});
+chooseName=function(msg, namePrompt, roomPrompt, creatingRoom){
+  var selectedName=document.getElementById("playerNameInput").value;
+  console.log(selectedName=="");
+  if(selectedName=="") {
+    console.log("executed");
+    msg.innerHTML="You have not chosen a name";
+  }else{
+    name=selectedName;
+    namePrompt.style.display="none";
+    console.log("iscreatinroom", creatingRoom);
+    if(creatingRoom){
+      roomPrompt.style.display="initial";
+      creatingRoom=!creatingRoom;
+    }
+  }
+}
+
+displayNamePrompt=function(namePrompt, currentName){
+  console.log("displaying name prompt...");
+  namePrompt.style.display="initial";
+  currentName.value=name;
 }
 
 window.onload=function(){
-  var roomPrompt=document.getElementById("prompt");
-  document.getElementById("chooseName").onclick=promptName=function(){
-    name=prompt("Enter your desired name");
+  var creatingRoom=false;
+  var roomPrompt=document.getElementById("room");
+  var namePrompt=document.getElementById("name");
+  var nameMsg=document.getElementById("nameMsg");
+  var roomMsg=document.getElementById("roomMsg");
+  var currentName=document.getElementById("playerNameInput");
+  document.getElementById("chooseName").onclick=function(){
+    displayNamePrompt(namePrompt, currentName);
+  }
+  document.getElementById("selectName").onclick=function(){
+    chooseName(nameMsg, namePrompt, roomPrompt,creatingRoom);
   }
   document.getElementById("newRoom").onclick=function(){
-    roomPrompt.style.display="initial";
+    creatingRoom=true;
+    if(name==""){
+      displayNamePrompt(namePrompt, currentName);
+    }else{
+      roomPrompt.style.display="initial";
+    }
+  }
+  document.getElementById("cancelName").onclick=function(){
+    if(creatingRoom && name==""){
+      nameMsg.innerHTML="You have not chosen a name";
+    }else{
+        namePrompt.style.display="none";
+    }
   }
   document.getElementById("createRoom").onclick=function(){
-    if(name==null)promptName();
     var roomName=document.getElementById("roomNameInput");
     var roomPass=document.getElementById("roomPassInput");
     var numOfPlayers=document.getElementById("numOfPlayers");

@@ -69,14 +69,9 @@ io.sockets.on("connection",function(socket){
   socket.on("obtainRooms",function(data,callback){
     callback(rooms);
   });
-  socket.on("roast",function(data){
-    console.log("you look like a thumb");
-  });
   socket.on("newRoom",function(data, callback){
     var uniqueID=validLinkID();
     callback(uniqueID);
-    console.log(uniqueID);
-    console.log(data.masterName+" has connected.");
     app.get("/room"+uniqueID, function(req, res){
       console.log("params",req.params);
       var currSessionID=req.session.id;

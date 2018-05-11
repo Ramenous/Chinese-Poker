@@ -5,17 +5,26 @@ html
     body
         h1 Hello World!
         p Nothing to see here.
-        div(id="prompt")
-          div(id="screen")
-          div(id="roomPrompt")
-            div(class="roomInputs" id="roomName")
-              span(class="inputName") Room Name:
+        div(id="name" class="promptContainer")
+          div(class="screen")
+          div(id="namePrompt" class="prompt")
+            div(class="inputContainer" id="playerName")
+              span(class="inputTitle") Choose your name:
+              input(class="input" name="playerName" id="playerNameInput")
+              span(class="msg" id="nameMsg")
+            button(id="selectName") Select Name
+            button(id="cancelName") Cancel
+        div(id="room" class="promptContainer")
+          div(class="screen")
+          div(id="roomPrompt" class="prompt")
+            div(class="inputContainer" id="roomName")
+              span(class="inputTitle") Room Name:
               input(class="input" name="roomName" id="roomNameInput")
-            div(class="roomInputs" id="roomPass")
-              span(class="inputName") Room Pass:
+            div(class="inputContainer" id="roomPass")
+              span(class="inputTitle") Room Pass:
               input(class="input" name="roomPass" id="roomPassInput")
-            div(class="roomInputs" id="dropdown")
-              span(class="inputName") Max Players:
+            div(class="inputContainer" id="dropdown")
+              span(class="inputTitle") Max Players:
               select(id="numOfPlayers")
                 option(value="2") 2
                 option(value="3") 3
