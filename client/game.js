@@ -42,10 +42,10 @@ window.onload=function(){
   document.getElementById("cancelRoom").onclick=function(){
     roomPrompt.style.display="none";
   }
-  socket.on("obtainRooms",function (data){
+  socket.emit("obtainRooms",{lol:"i"},function (data){
     for(var room in data){
       var node = document.createElement("LI");
-      var roomName = document.createTextNode(room.name);
+      var roomName = document.createTextNode(data[room].name);
       node.appendChild(roomName);
       var join = document.createElement("BUTTON");
       join.innerHTML="Join Room";
@@ -53,13 +53,13 @@ window.onload=function(){
         if(name==null)promptName();
         var dataObj={
           playerName:name,
-          room: room.id
+          room: data[room].id
         }
         socket.emit("joinRoom", dataObj);
-        window.location.href="/room"+room.id;
+        window.location.href="/room"+data[room].id;
       }
+      node.appendChild(join);
       document.getElementById("roomList").appendChild(node);
-
     }
   });
 }

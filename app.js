@@ -66,7 +66,9 @@ function validLinkID(){
 var io = socketIO(serv);
 io.sockets.on("connection",function(socket){
   console.log("connected");
-  socket.emit("obtainRooms",rooms);
+  socket.on("obtainRooms",function(data,callback){
+    callback(rooms);
+  });
   socket.on("roast",function(data){
     console.log("you look like a thumb");
   });
@@ -78,21 +80,26 @@ io.sockets.on("connection",function(socket){
     app.get("/room"+uniqueID, function(req, res){
       console.log("params",req.params);
       var currSessionID=req.session.id;
-      var master=new Player(data.masterName, currSessionID);
-      sessions[currSessionID].room=new Room(uniqueID, data.roomName, data.roomPass,master, data.numOfPlayers);
-      res.render("room", {id: uniqueID, sessionID: currSessionID});
-      socket.emit("playerUpdate",players);
+      var newRoom=new Room(uniqueID, data.roomName, data.roomPass, data.numOfPlayers);
+      var master=(players[currSessionID]==null) ? new Player(data.masterName,currSessionID) : players[currSessionID];
+      master.inRoom=master.isMaster=true;
+      newRoom.addPlayer(master);
+      console.log(master);
+      console.log(newRoom);
+      res.render("room", {roomID: uniqueID, sessionID: currSessionID});
+      socket.emit("playerUpdate", players);
     });
   });
   socket.on("joinRoom", function(data){
-    console.log("requested join room is room: "+data);
+    console.log("Joining Room...");
     var id=data.room;
-    var currSessionID=req.session.id;
-    app.get("/room"+data.room, function(req, res){
-      var player = (players[data.playerName]==null) ? new Player(data.playerName, currSessionID): players[data.playerName];
-      rooms[data.room].players.push(player);
-      res.render("room",  {id: data.room, sessionID: currSessionID});
-    }
+    app.get("/room"+id, function(req, res){
+      var currSessionID=req.session.id;
+      var player=(players[currSessionID]==null) ? new Player(data.playerName,currSessionID) : players[currSessionID];
+      player.inRoom=true;
+      rooms[id].addPlayer(player);
+      res.render("room", {roomID: id, sessionID: currSessionID});
+    });
   });
   socket.on("obtainRoomData", function(data, callback){
       callback(rooms[parseInt(data)]);
@@ -101,17 +108,19 @@ io.sockets.on("connection",function(socket){
 
 Player=function(name, sessionID){
   this.name=name;
-  this.inGame=true;
+  this.inRoom=true;
   this.sessionID=sessionID;
-  players[name]=this;
+  players[sessionID]=this;
 }
 
-Room=function(id, name, pass, master, maxPlayers){
+Room=function(id, name, pass, maxPlayers){
   this.id=id;
   this.name=name;
   this.pass=pass;
-  this.master=master;
   this.players=[];
-  this.players.push(master);
+  this.addPlayer=function(player){
+    if(player.isMaster) this.master=player;
+    this.players.push(player);
+  }
   rooms[id]=this;
 }
