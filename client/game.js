@@ -53,15 +53,13 @@ window.onload=function(){
       numOfPlayers:numOfPlayers.value
     };
     socket.emit("newRoom",dataObj,function(data){
-      console.log("This should be the unique ID:", data);
       window.location.href="/room"+data+"/"+name;
     });
-    console.log(roomName.value, roomPass.value, numOfPlayers.value);
   }
   document.getElementById("cancelRoom").onclick=function(){
     roomPrompt.style.display="none";
   }
-  socket.emit("obtainRooms",{lol:"i"},function (data){
+  socket.emit("obtainRooms",{},function (data){
     for(var room in data){
       var node = document.createElement("LI");
       var roomName = document.createTextNode(data[room].name);
