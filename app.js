@@ -69,12 +69,29 @@ io.sockets.on("connection",function(socket){
   socket.on("obtainRooms",function(data,callback){
     callback(rooms);
   });
+  socket.on("joinRoom", function(data){
+    console.log("Joining Room...");
+    var id=data.room;
+    console.log("joining room ",id);
+    console.log("Playername", data.playerName);
+    app.get("/room"+id, function(req, res){
+      var currSessionID=req.session.id;
+      var player=(players[currSessionID]==null) ? new Player(data.playerName,currSessionID) : players[currSessionID];
+      player.inRoom=true;
+      rooms[id].addPlayer(player);
+      console.log("PLAYERRRRrrrrrrrrrrrr",player);
+      console.log("ROOM!!",rooms[id]);
+      console.log("player num", rooms[id].players.length);
+      res.render("room", {roomID: id, sessionID: currSessionID});
+    });
+  });
   socket.on("newRoom",function(data, callback){
     var uniqueID=validLinkID();
     callback(uniqueID);
     app.get("/room"+uniqueID, function(req, res){
-      console.log("params",req.params);
+      console.log("params",req.param("roomName"));
       var currSessionID=req.session.id;
+      console.log("USER SESSION!!!!!!: ",currSessionID);
       var newRoom=new Room(uniqueID, data.roomName, data.roomPass, data.numOfPlayers);
       var master=(players[currSessionID]==null) ? new Player(data.masterName,currSessionID) : players[currSessionID];
       master.inRoom=master.isMaster=true;
@@ -82,18 +99,6 @@ io.sockets.on("connection",function(socket){
       console.log(master);
       console.log(newRoom);
       res.render("room", {roomID: uniqueID, sessionID: currSessionID});
-      socket.emit("playerUpdate", players);
-    });
-  });
-  socket.on("joinRoom", function(data){
-    console.log("Joining Room...");
-    var id=data.room;
-    app.get("/room"+id, function(req, res){
-      var currSessionID=req.session.id;
-      var player=(players[currSessionID]==null) ? new Player(data.playerName,currSessionID) : players[currSessionID];
-      player.inRoom=true;
-      rooms[id].addPlayer(player);
-      res.render("room", {roomID: id, sessionID: currSessionID});
     });
   });
   socket.on("obtainRoomData", function(data, callback){
