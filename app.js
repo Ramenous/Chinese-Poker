@@ -74,10 +74,11 @@ io.sockets.on("connection",function(socket){
     var id=data.room;
     console.log("joining room ",id);
     console.log("Playername", data.playerName);
-    app.get("/room"+id, function(req, res){
+    app.get("/room"+id+"/"+data.playerName, function(req, res){
       var currSessionID=req.session.id;
       var player=(players[currSessionID]==null) ? new Player(data.playerName,currSessionID) : players[currSessionID];
       player.inRoom=true;
+      player.isMaster=false;
       rooms[id].addPlayer(player);
       console.log("PLAYERRRRrrrrrrrrrrrr",player);
       console.log("ROOM!!",rooms[id]);
@@ -88,7 +89,7 @@ io.sockets.on("connection",function(socket){
   socket.on("newRoom",function(data, callback){
     var uniqueID=validLinkID();
     callback(uniqueID);
-    app.get("/room"+uniqueID, function(req, res){
+    app.get("/room"+uniqueID+"/"+data.masterName, function(req, res){
       console.log("params",req.param("roomName"));
       var currSessionID=req.session.id;
       console.log("USER SESSION!!!!!!: ",currSessionID);

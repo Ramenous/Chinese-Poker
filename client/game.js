@@ -54,7 +54,7 @@ window.onload=function(){
     };
     socket.emit("newRoom",dataObj,function(data){
       console.log("This should be the unique ID:", data);
-      window.location.href="/room"+data;
+      window.location.href="/room"+data+"/"+name;
     });
     console.log(roomName.value, roomPass.value, numOfPlayers.value);
   }
@@ -77,7 +77,7 @@ window.onload=function(){
             room: data[room].id
           }
           socket.emit("joinRoom", dataObj);
-          window.location.href="/room"+data[room].id;
+          window.location.href="/room"+data[room].id+"/"+name;
         }
       }
       node.appendChild(join);
