@@ -33,6 +33,7 @@ app.get("/", function(req, res){
   if(sessions[currSessionID]==null){
     sessions[currSessionID]=currSessionID;
     console.log("New User has connected - Session: ", currSessionID);
+    res.render("test");
   }else{
     if(players[currSessionID].inRoom){
       res.render("room", {roomID: players[currSessionID].room, sessionID: currSessionID});
@@ -133,12 +134,36 @@ const HIGHEST_RANK=14;
 const SUITS={1:"Diamond", 2:"Clover", 3:"Heart", 4:"Spade"};
 const RANKS={11:"Jack", 12:"Queen", 13:"King", 14:"Ace"};
 const SHUFFLE_METHOD={
+  //BlackJack Shuffle
   1: function(){
+    var shuffledDeck=[];
+    var boolSwitch=true;
     var halfSize=deck.length/2;
-    var otherHalf=deck.splice(halfSize, halfSize);
+    var halfDeck=deck.splice(0, halfSize);
+    var otherHalfDeck=deck.splice(halfSize, deck.length);
     var consecutivePushes=1;
-    for(var i=0; i<halfSize; i+=consecutivePushes){
-      consecutivePushes=Math.floor((Math.random() * 3) + 1);
+    var i=j=0;
+    while(shuffledDeck.length<=52){
+      consecutivePushes=Math.floor((Math.random() * 1) + 0);
+      if(boolSwitch && (i+consecutivePushes)<=halfSize){
+        shuffledDeck.push(halfDeck.splice(i,i+consecutivePushes+1));
+        i+=consecutivePushes;
+      }else{
+        if(!boolSwitch && (j+consecutivePushes)<=halfSize){
+          shuffledDeck.push(otherHalfDeck.splice(j,j+consecutivePushes+1));
+          j+=consecutivePushes;
+        }
+      }
+      boolSwitch=!boolSwitch;
+    }
+    return shuffledDeck;
+  },
+  //Strip Shuffle
+  2: function(){
+    var i=j=0;
+    var shuffledDeck=deck.splice();
+    while(deck.splice(i,j+1).length > deck.length*0.2){
+
     }
   }
 }

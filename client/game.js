@@ -21,6 +21,11 @@ displayNamePrompt=function(namePrompt, currentName){
 }
 
 window.onload=function(){
+  var d1=[1,2,3,4,5,6,7,8,9,10];
+  var d2=["a","b","c","d","e","f"];
+  var dd=[];
+  dd.push(d1.splice(d1.length/2,d1.length/2));
+  alert(dd);
   var roomPrompt=document.getElementById("room");
   var namePrompt=document.getElementById("name");
   var nameMsg=document.getElementById("nameMsg");
