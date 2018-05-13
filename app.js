@@ -29,14 +29,18 @@ app.set("views", path.join(__dirname, "/client"));
 */
 
 app.get("/", function(req, res){
-  var currSession=req.session;
-  if(sessions[currSession.id]==null){
-    sessions[currSession.id]=currSession;
-    console.log("hi new user");
+  var currSessionID=req.session.id;
+  if(sessions[currSessionID]==null){
+    sessions[currSessionID]=currSessionID;
+    console.log("New User has connected - Session: ", currSessionID);
   }else{
-    console.log("Welcome back!!!",sessions[req.session]);
+    if(players[currSessionID].inRoom){
+      res.render("room", {roomID: players[currSessionID].room, sessionID: currSessionID});
+    }else{
+      res.render("test");
+    }
+    console.log("User Session ", currSessionID, " has reconnected.");
   }
-  res.render("test");
 });
 
 /*
