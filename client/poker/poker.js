@@ -6,7 +6,7 @@ const HIGHEST_RANK=14;
 const SUITS={1:"Diamond", 2:"Clover", 3:"Heart", 4:"Spade"};
 const RANKS={11:"Jack", 12:"Queen", 13:"King", 14:"Ace"};
 const SHUFFLE_METHOD={
-  //BlackJack Shuffle
+  //Ripple Shuffle
   1: function(deck){
     var shuffledDeck=[];
     var boolSwitch=true;
@@ -58,6 +58,16 @@ const SHUFFLE_METHOD={
     return shuffledDeck;
   }
 }
+
+Shuffle=function(deck, amount){
+  var shuffledDeck=deck;
+  var end=(amount==null) ? 1 : amount;
+  for(var i=0; i<end; i++){
+    var method=Math.floor((Math.random() * 4) + 1);
+    shuffledDeck=SHUFFLE_METHOD[method](shuffledDeck);
+  }
+}
+
 initializeDeck=function(gameType){
   var deck = new Deck();
   for(var i=LOWEST_RANK; i<=HIGHEST_RANK; i++){
@@ -87,14 +97,6 @@ Card = function(rank, suit, display){
   this.img=suit+"-"+display+".png";
   this.name=""+rank+":"+suit+"";
   deck.push(this);
-}
-
-Shuffle=function(deck, amount){
-  var shuffledDeck=deck;
-  for(var i=0; i<amount; i++){
-    var method=Math.floor((Math.random() * 4) + 1);
-    shuffledDeck=SHUFFLE_METHOD[method](shuffledDeck);
-  }
 }
 
 Start= function(gameType){
