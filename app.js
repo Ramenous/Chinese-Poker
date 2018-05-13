@@ -126,7 +126,6 @@ Room=function(id, name, pass, maxPlayers){
 //-----Game functionality
 
 //Spade > Heart > Clover > Diamond
-var deck=[];
 const LOWEST_SUIT=1;
 const HIGHEST_SUIT=4;
 const LOWEST_RANK=2;
@@ -135,7 +134,7 @@ const SUITS={1:"Diamond", 2:"Clover", 3:"Heart", 4:"Spade"};
 const RANKS={11:"Jack", 12:"Queen", 13:"King", 14:"Ace"};
 const SHUFFLE_METHOD={
   //BlackJack Shuffle
-  1: function(){
+  1: function(deck){
     var shuffledDeck=[];
     var boolSwitch=true;
     var halfSize=deck.length/2;
@@ -159,22 +158,42 @@ const SHUFFLE_METHOD={
     return shuffledDeck;
   },
   //Strip Shuffle
-  2: function(){
+  2: function(deck){
     var i=j=0;
-    var shuffledDeck=deck.splice();
-    while(deck.splice(i,j+1).length > deck.length*0.2){
-
+    var len=deck.length;
+    var iterations=Math.floor((Math.random() * 10) + 5);
+    while(iterations>0){
+      var i=Math.floor((Math.random() * len * 0.15) + len * 0.05);
+      var j=Math.floor((Math.random() * len * 0.8) + len * 0.9);
+      var strippedDeck=deck.splice(i,j+1);
+      deck.push(strippedDeck);
+      iterations--;
     }
+    return deck;
+  },
+  3: function(deck){
+
   }
 }
 initializeDeck=function(gameType){
+  var deck = new Deck();
   for(var i=LOWEST_RANK; i<=HIGHEST_RANK; i++){
     for(var j=LOWEST_SUIT; j<=HIGHEST_SUIT; j++){
+      var card;
       if(gameType==1)
-        (i==HIGHEST_RANK) ? new Card(i,j,LOWEST_RANK) : new Card(i, j, j+1);
+        card=(i==HIGHEST_RANK) ? new Card(i,j,LOWEST_RANK) : new Card(i, j, j+1);
       else
-        new Card(i,j);
+        card=new Card(i,j);
+      deck.add(card);
     }
+  }
+  return deck;
+}
+
+Deck = function(){
+  this.cards=[];
+  this.add=function(card){
+    this.cards.push(card);
   }
 }
 
@@ -187,12 +206,15 @@ Card = function(rank, suit, display){
   deck.push(this);
 }
 
-shuffle=function(){
-  var method=Math.floor((Math.random() * 10) + 1);
-
+Shuffle=function(deck, amount){
+  var shuffledDeck=deck;
+  for(var i=0; i<amount; i++){
+    var method=Math.floor((Math.random() * 4) + 1);
+    shuffledDeck=SHUFFLE_METHOD[method](shuffledDeck);
+  }
 }
 
 Start= function(gameType){
-  initializeDeck(gameType);
+  var deck=initializeDeck(gameType);
 
 }

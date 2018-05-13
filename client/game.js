@@ -20,12 +20,16 @@ displayNamePrompt=function(namePrompt, currentName){
   currentName.value=name;
 }
 
+rayTest = function(ray){
+  ray.splice(3,6);
+  return ray;
+}
+
 window.onload=function(){
-  var d1=[1,2,3,4,5,6,7,8,9,10];
-  var d2=["a","b","c","d","e","f"];
-  var dd=[];
-  dd.push(d1.splice(d1.length/2,d1.length/2));
-  alert(dd);
+  var d1=[1,2,3,4,5,6,7,8,9,11];
+  var len=d1.length;
+  var d2=d1.splice(2,6);
+  alert(len);
   var roomPrompt=document.getElementById("room");
   var namePrompt=document.getElementById("name");
   var nameMsg=document.getElementById("nameMsg");
