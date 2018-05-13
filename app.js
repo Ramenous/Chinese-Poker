@@ -121,3 +121,53 @@ Room=function(id, name, pass, maxPlayers){
   }
   rooms[id]=this;
 }
+
+//-----Game functionality
+
+//Spade > Heart > Clover > Diamond
+var deck=[];
+const LOWEST_SUIT=1;
+const HIGHEST_SUIT=4;
+const LOWEST_RANK=2;
+const HIGHEST_RANK=14;
+const SUITS={1:"Diamond", 2:"Clover", 3:"Heart", 4:"Spade"};
+const RANKS={11:"Jack", 12:"Queen", 13:"King", 14:"Ace"};
+const SHUFFLE_METHOD={
+  1: function(){
+    var halfSize=deck.length/2;
+    var otherHalf=deck.splice(halfSize, halfSize);
+    var consecutivePushes=1;
+    for(var i=0; i<halfSize; i+=consecutivePushes){
+      consecutivePushes=Math.floor((Math.random() * 3) + 1);
+    }
+  }
+}
+initializeDeck=function(gameType){
+  for(var i=LOWEST_RANK; i<=HIGHEST_RANK; i++){
+    for(var j=LOWEST_SUIT; j<=HIGHEST_SUIT; j++){
+      if(gameType==1)
+        (i==HIGHEST_RANK) ? new Card(i,j,LOWEST_RANK) : new Card(i, j, j+1);
+      else
+        new Card(i,j);
+    }
+  }
+}
+
+Card = function(rank, suit, display){
+  this.suit=suit;
+  this.rank=rank;
+  this.display = (display==null) ? rank : display;
+  this.img=suit+"-"+display+".png";
+  this.name=""+rank+":"+suit+"";
+  deck.push(this);
+}
+
+shuffle=function(){
+  var method=Math.floor((Math.random() * 10) + 1);
+
+}
+
+Start= function(gameType){
+  initializeDeck(gameType);
+
+}
