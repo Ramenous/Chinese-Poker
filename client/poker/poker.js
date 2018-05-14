@@ -3,10 +3,12 @@ const LOWEST_SUIT=1;
 const HIGHEST_SUIT=4;
 const LOWEST_RANK=2;
 const HIGHEST_RANK=14;
-const CARD_WIDTH=121;
-const CARD_HEIGHT=177;
+const CARD_WIDTH=71;
+const CARD_HEIGHT=96;
 const SUITS={1:"Diamond", 2:"Clover", 3:"Heart", 4:"Spade"};
 const RANKS={11:"Jack", 12:"Queen", 13:"King", 14:"Ace"};
+const CARD_SPACING=1;
+const CARDS=new Image();
 const SHUFFLE_METHOD={
   //Ripple Shuffle
   1: function(deck){
@@ -76,13 +78,12 @@ Deck = function(){
   this.add=function(card){
     this.cards.push(card);
   }
-  this.display=function(){
+  this.displayCards=function(){
     var ctx=document.getElementById("canvas").getContext('2d');
-    var img = new Image();
-    img.src="img/poker.png";
-    for(var i=0; i<HIGHEST_RANK; i++){
-      for(var j=0; j<HIGHEST_SUIT; j++){
-        ctx.drawImage(img, i * CARD_WIDTH, j * CARD_HEIGHT, CARD_WIDTH, CARD_HEIGHT);
+    for(var rank=0; rank<HIGHEST_RANK; rank++){
+      for(var suit=0; suit<HIGHEST_SUIT; suit++){
+        ctx.drawImage(CARDS, (rank*CARD_WIDTH)+CARD_SPACING, (suit*CARD_HEIGHT)+CARD_SPACING, CARD_WIDTH+CARD_SPACING, CARD_HEIGHT+CARD_SPACING,
+              (rank*CARD_WIDTH)+CARD_SPACING, (suit*CARD_HEIGHT)+CARD_SPACING, CARD_WIDTH+CARD_SPACING, CARD_HEIGHT+CARD_SPACING);
       }
     }
   }
@@ -111,13 +112,17 @@ Card = function(rank, suit, display){
   this.width=CARD_WIDTH;
   this.height=CARD_HEIGHT;
   this.name=""+rank+":"+suit+"";
-  //deck.push(this);
+}
+
+initialize=function(){
+  CARDS.src="img/poker.png";
 }
 
 Start= function(gameType, shuffled, amount){
-  var deck=initializeDeck(gameType);
-  console.log(deck);
-  deck.display();
-  if(shuffled) deck=shuffleDeck(deck, amount);
-
+  initialize();
+  var deckz=initializeDeck(gameType);
+  setInterval(function(){ deckz.displayCards(); }, 2000);
+  //if(shuffled) deck=shuffleDeck(deck, amount);
 }
+
+Start(1,true,1);
