@@ -80,11 +80,17 @@ Deck = function(){
   }
   this.displayCards=function(){
     var ctx=document.getElementById("canvas").getContext('2d');
-    for(var rank=0; rank<HIGHEST_RANK; rank++){
-      for(var suit=0; suit<HIGHEST_SUIT; suit++){
-        ctx.drawImage(CARDS, (rank*CARD_WIDTH)+CARD_SPACING, (suit*CARD_HEIGHT)+CARD_SPACING, CARD_WIDTH+CARD_SPACING, CARD_HEIGHT+CARD_SPACING,
-              (rank*CARD_WIDTH)+CARD_SPACING, (suit*CARD_HEIGHT)+CARD_SPACING, CARD_WIDTH+CARD_SPACING, CARD_HEIGHT+CARD_SPACING);
+    var i=j=0;
+    for(var card in this.cards){
+      if(i%13==0 && i>0){
+        i=0;
+        j++;
       }
+      var suit=this.cards[card].suit;
+      var rank=this.cards[card].display;
+      ctx.drawImage(CARDS, (rank-LOWEST_RANK)*CARD_WIDTH, (suit-LOWEST_SUIT)*CARD_HEIGHT, CARD_WIDTH, CARD_HEIGHT,
+            i*CARD_WIDTH, j*CARD_HEIGHT, CARD_WIDTH, CARD_HEIGHT);
+      i++;
     }
   }
 }
@@ -95,7 +101,7 @@ initializeDeck=function(gameType){
     for(var j=LOWEST_SUIT; j<=HIGHEST_SUIT; j++){
       var card;
       if(gameType==1)
-        card=(i==HIGHEST_RANK) ? new Card(i,j,LOWEST_RANK) : new Card(i, j, j+1);
+        card=(i==HIGHEST_RANK) ? new Card(i,j,LOWEST_RANK) : new Card(i, j, i+1);
       else
         card=new Card(i,j);
       deck.add(card);
@@ -108,7 +114,6 @@ Card = function(rank, suit, display){
   this.suit=suit;
   this.rank=rank;
   this.display = (display==null) ? rank : display;
-  this.img=suit+"-"+display+".png";
   this.width=CARD_WIDTH;
   this.height=CARD_HEIGHT;
   this.name=""+rank+":"+suit+"";
@@ -121,8 +126,9 @@ initialize=function(){
 Start= function(gameType, shuffled, amount){
   initialize();
   var deckz=initializeDeck(gameType);
+  if(shuffled) deckz=shuffleDeck(deckz, amount,1);
+  console.log(deckz);
   setInterval(function(){ deckz.displayCards(); }, 2000);
-  //if(shuffled) deck=shuffleDeck(deck, amount);
 }
 
 Start(1,true,1);
