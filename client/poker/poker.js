@@ -14,21 +14,16 @@ const SHUFFLE_METHOD={
   1: function(deck){
     var shuffledDeck=[];
     var boolSwitch=true;
-    var halfSize=deck.length/2;
-    var halfDeck=deck.splice(0, halfSize);
-    var otherHalfDeck=deck.splice(halfSize, deck.length);
+    var halfDeck=deck.splice(0, deck.length/2);
     var consecutivePushes=1;
-    var i=j=0;
-    while(shuffledDeck.length<=52){
+    while(shuffledDeck.length!=52){
       consecutivePushes=Math.floor((Math.random() * 1) + 0);
-      if(boolSwitch && (i+consecutivePushes)<=halfSize){
-        shuffledDeck.push(halfDeck.splice(i,i+consecutivePushes+1));
+      if(boolSwitch && halfDeck.length>0){
+        shuffledDeck=shuffledDeck.concat(halfDeck.splice(0,consecutivePushes+1));
         i+=consecutivePushes;
-      }else{
-        if(!boolSwitch && (j+consecutivePushes)<=halfSize){
-          shuffledDeck.push(otherHalfDeck.splice(j,j+consecutivePushes+1));
-          j+=consecutivePushes;
-        }
+      }else if(!boolSwitch && deck.length>0){
+        shuffledDeck=shuffledDeck.concat(deck.splice(0,consecutivePushes+1));
+        j+=consecutivePushes;
       }
       boolSwitch=!boolSwitch;
     }
@@ -65,12 +60,13 @@ const SHUFFLE_METHOD={
 
 function shuffleDeck(deck, amount, shuffleMethod){
   var shuffledDeck=deck.cards;
-  var end=(amount==null) ? 1 : amount;
-  for(var i=0; i<end; i++){
+  var timesShuffled=(amount==null) ? 1 : amount;
+  for(var i=0; i<timesShuffled; i++){
     var method=(shuffleMethod==null) ? Math.floor((Math.random() * 3) + 1) : shuffleMethod;
     shuffledDeck=SHUFFLE_METHOD[method](shuffledDeck);
   }
-  return shuffledDeck;
+  deck.cards=shuffledDeck;
+  console.log("after",deck.cards);
 }
 
 Deck = function(){
@@ -123,10 +119,16 @@ initialize=function(){
   CARDS.src="img/poker.png";
 }
 
+document.getElementById("shuffle").onclick=function(){
+  shuffleDeck(deckz, 1,1);
+}
+
+var deckz;
+
 Start= function(gameType, shuffled, amount){
   initialize();
-  var deckz=initializeDeck(gameType);
-  if(shuffled) deckz=shuffleDeck(deckz, amount,1);
+  deckz=initializeDeck(gameType);
+  console.log(deckz);
   console.log(deckz);
   setInterval(function(){ deckz.displayCards(); }, 2000);
 }
