@@ -11,40 +11,35 @@ const CARD_SPACING=1;
 const CARDS=new Image();
 const SHUFFLE_METHOD={
   //Ripple Shuffle
-  1: function(deck){
-    var shuffledDeck=[];
-    var boolSwitch=true;
-    var halfDeck=deck.splice(0, deck.length/2);
-    var consecutivePushes=1;
-    while(shuffledDeck.length!=52){
-      consecutivePushes=Math.floor((Math.random() * 1) + 0);
-      if(boolSwitch && halfDeck.length>0){
-        shuffledDeck=shuffledDeck.concat(halfDeck.splice(0,consecutivePushes+1));
-        i+=consecutivePushes;
-      }else if(!boolSwitch && deck.length>0){
-        shuffledDeck=shuffledDeck.concat(deck.splice(0,consecutivePushes+1));
-        j+=consecutivePushes;
-      }
-      boolSwitch=!boolSwitch;
+  1: function rippleShuffle(shuffledDeck, deck, boolSwitch){
+    if(shuffledDeck.length==52){
+      return shuffledDeck;
+    }else{
+      var consecutivePushes=Math.floor((Math.random() * 1) + 0);
+      var cardMarker=(boolSwitch) ? deck.length/2 : 0;
+      console.log("marker",cardMarker);
+      console.log("amount",cardMarker+consecutivePushes+1);
+      shuffledDeck=shuffledDeck.concat(deck.splice(cardMarker, cardMarker+consecutivePushes+1));
+      return rippleShuffle(shuffledDeck, deck, !boolSwitch);
     }
-    return shuffledDeck;
   },
   //Strip Shuffle
-  2: function(deck){
-    var i=j=0;
-    var len=deck.length;
-    var iterations=Math.floor((Math.random() * 10) + 5);
-    while(iterations>0){
+  2: function stripShuffle(shuffledDeck, deck, boolSwitch){
+    if(shuffledDeck.length==52){
+      return shuffledDeck;
+    }else if(deck.length<= 52 * 0.15){
+      shuffledDeck=shuffledDeck.concat(deck);
+      return shuffledDeck;
+    }else{
       var i=Math.floor((Math.random() * len * 0.15) + len * 0.05);
       var j=Math.floor((Math.random() * len * 0.8) + len * 0.9);
       var strippedDeck=deck.splice(i,j+1);
-      deck.push(strippedDeck);
-      iterations--;
+      shuffledDeck=shuffledDeck.concat(deck);
+      return stripShuffle(shuffledDeck, strippedDeck);
     }
-    return deck;
   },
   //Hindu Shuffle
-  3: function(deck){
+  3: function(shuffledDeck, deck, boolSwitch){
     var shuffledDeck=[];
     var i = deck.length-Math.floor((Math.random() * 7) + 3);
     var strippedDeck=deck.splice(i,deck.length);
@@ -59,14 +54,13 @@ const SHUFFLE_METHOD={
 }
 
 function shuffleDeck(deck, amount, shuffleMethod){
-  var shuffledDeck=deck.cards;
   var timesShuffled=(amount==null) ? 1 : amount;
   for(var i=0; i<timesShuffled; i++){
     var method=(shuffleMethod==null) ? Math.floor((Math.random() * 3) + 1) : shuffleMethod;
-    shuffledDeck=SHUFFLE_METHOD[method](shuffledDeck);
+    var shuffledDeck=[];
+    shuffledDeck=SHUFFLE_METHOD[method](shuffledDeck, deck.cards, true);
+    deck.cards=shuffledDeck;
   }
-  deck.cards=shuffledDeck;
-  console.log("after",deck.cards);
 }
 
 Deck = function(){
