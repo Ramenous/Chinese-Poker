@@ -15,10 +15,8 @@ const SHUFFLE_METHOD={
     if(shuffledDeck.length==52){
       return shuffledDeck;
     }else{
-      var consecutivePushes=Math.floor((Math.random() * 1) + 0);
+      var consecutivePushes=Math.round(Math.random());
       var cardMarker=(boolSwitch) ? deck.length/2 : 0;
-      console.log("marker",cardMarker);
-      console.log("amount",cardMarker+consecutivePushes+1);
       shuffledDeck=shuffledDeck.concat(deck.splice(cardMarker, cardMarker+consecutivePushes+1));
       return rippleShuffle(shuffledDeck, deck, !boolSwitch);
     }
@@ -31,25 +29,25 @@ const SHUFFLE_METHOD={
       shuffledDeck=shuffledDeck.concat(deck);
       return shuffledDeck;
     }else{
-      var i=Math.floor((Math.random() * len * 0.15) + len * 0.05);
-      var j=Math.floor((Math.random() * len * 0.8) + len * 0.9);
+      var len=deck.length;
+      var i=Math.floor((Math.random() * 5) + (len * 0.05));
+      var j=Math.floor((Math.random() * 5) + (len * 0.8));
       var strippedDeck=deck.splice(i,j+1);
       shuffledDeck=shuffledDeck.concat(deck);
       return stripShuffle(shuffledDeck, strippedDeck);
     }
   },
-  //Hindu Shuffle
-  3: function(shuffledDeck, deck, boolSwitch){
-    var shuffledDeck=[];
-    var i = deck.length-Math.floor((Math.random() * 7) + 3);
-    var strippedDeck=deck.splice(i,deck.length);
-    while(strippedDeck.length>4){
-      shuffledDeck.push(strippedDeck);
-      i-=Math.floor((Math.random() * 7) + 3);
-      if(i>=0) strippedDeck=deck.splice(i,deck.length);
+  //Overhand Shuffle
+  3: function overHandShuffle(shuffledDeck, deck, boolSwitch){
+    if(deck.length<=7){
+      shuffledDeck=shuffledDeck.concat(deck);
+      return shuffledDeck;
+    }else{
+      var marker = deck.length-Math.floor((Math.random() * 6) + 3);
+      var strippedDeck=deck.splice(marker,deck.length);
+      shuffledDeck=shuffledDeck.concat(strippedDeck);
+      return overHandShuffle(shuffledDeck,deck,boolSwitch);
     }
-    shuffledDeck.push(strippedDeck);
-    return shuffledDeck;
   }
 }
 
@@ -114,17 +112,13 @@ initialize=function(){
 }
 
 document.getElementById("shuffle").onclick=function(){
-  shuffleDeck(deckz, 1,1);
+  shuffleDeck(deckMain, 1,3);
 }
-
-var deckz;
-
+var deckMain;
 Start= function(gameType, shuffled, amount){
   initialize();
-  deckz=initializeDeck(gameType);
-  console.log(deckz);
-  console.log(deckz);
-  setInterval(function(){ deckz.displayCards(); }, 2000);
+  deckMain=initializeDeck(gameType);
+  setInterval(function(){ deckMain.displayCards(); }, 2000);
 }
 
 Start(1,true,1);
