@@ -8,6 +8,48 @@ const CARD_HEIGHT=96;
 const SUITS={1:"Diamond", 2:"Clover", 3:"Heart", 4:"Spade"};
 const RANKS={11:"Jack", 12:"Queen", 13:"King", 14:"Ace"};
 const CARD_SPACING=1;
+const RANKING={
+  "RoyalFlush": function(hand){
+    return hand[0].rank==10 && isConsecutive(hand) && containsSameSuit(hand);
+  },
+  "StraightFlush": function(hand){
+    return isConsecutive(hand) && containsSameSuit(hand);
+  },
+  "FourOfAKind": function(hand){
+    var start=0;
+    var end=hand.length;
+    (hand[0].rank!=hand[1].rank) ? start++ : end--;
+    return containsSameRank(hand, start,end);
+  },
+  "FullHouse": function(hand){
+    var i=0;
+    if(hand[0].rank!=hand[2].rank)i++;
+    return containsSameRank(hand, 0,3-i) && containsSameRank(hand, 3-i, hand.length);
+  },
+  "Flush":function(hand){
+    return containsSameSuit(hand);
+  },
+  "Straight": function(hand){
+    return isConsecutive(hand);
+  },
+  "Triple": function(hand){
+    return isConsecutive(hand);
+  },
+  "Pair": function(){
+    return isConsecutive(hand);
+  }
+};
+const HIERARCHY={
+  9:"RoyalFlush",
+  8:"StraightFlush",
+  7:"FourOfAKind",
+  6:"FullHouse",
+  5:"Flush",
+  4:"Straight",
+  3:"Triple",
+  2:"Pair",
+  1:"HighCard",
+};
 const CARDS=new Image();
 const SHUFFLE_METHOD={
   //Ripple Shuffle
@@ -49,7 +91,7 @@ const SHUFFLE_METHOD={
       return overHandShuffle(shuffledDeck,deck,boolSwitch);
     }
   }
-}
+};
 
 function shuffleDeck(deck, amount, shuffleMethod){
   var timesShuffled=(amount==null) ? 1 : amount;
@@ -59,6 +101,55 @@ function shuffleDeck(deck, amount, shuffleMethod){
     shuffledDeck=SHUFFLE_METHOD[method](shuffledDeck, deck.cards, true);
     deck.cards=shuffledDeck;
   }
+}
+
+containsSameRank=function(hand, start, end){
+  var startInd=(start==null)?0:start;
+  var endInd=(end==null)?hand.length-1:end-1;
+  for(var i=startInd; i<endInd; i++){
+    if(hand[i].rank!=hand[i+1].rank) return false;
+  }
+  return true;
+}
+
+containsSameSuit=function(hand, start, end){
+  var startInd=(start==null)?0:start;
+  var endInd=(end==null)?hand.length-1:end-1;
+  for(var i=startInd; i<endInd; i++){
+    if(hand[i].suit!=hand[i+1].suit) return false;
+  }
+  return true;
+}
+
+isConsecutive=function(hand, start, end){
+  var startInd=(start==null)?0:start;
+  var endInd=(end==null)?hand.length-1:end-1;
+  for(var i=startInd; i<endInd; i++){
+    if(hand[i].rank+1!=hand[i+1].rank) return false;
+  }
+  return true;
+}
+
+getHierarchyRank=function(ranking){
+  for(var rank in HIERARCHY){
+    if(ranking==HIERARCHY[rank])return rank;
+  }
+}
+
+findHandRanking=function(hand, ranking){
+  if(ranking==null) ranking=9;
+  if(hand.length==1){
+    return hand[0].rank;
+  }else if(hand.length==2){
+    return RANKING[HIERARCHY[2]](hand);
+  }else if(hand.length==3){
+    return RANKING[HIERARCHY[3]](hand);
+  }else if(hand.length==5 && ranking>3){
+    return (RANKING[HIERARCHY[ranking]](hand)) ? ranking : findHandRanking(hand, ranking--);
+  }else{
+    return 0;
+  }
+
 }
 
 Deck = function(){
@@ -114,10 +205,14 @@ initialize=function(){
 document.getElementById("shuffle").onclick=function(){
   shuffleDeck(deckMain, 1,3);
 }
+var pair=[new Card(5,3), new Card (5,2)];
+var trip=[new Card(5,3), new Card (5,2), new Card(5,4)];
 var deckMain;
 Start= function(gameType, shuffled, amount){
   initialize();
   deckMain=initializeDeck(gameType);
+  console.log(RANKING[HIERARCHY[3]](pair));
+  console.log(RANKING[HIERARCHY[2]](trip));
   setInterval(function(){ deckMain.displayCards(); }, 2000);
 }
 
