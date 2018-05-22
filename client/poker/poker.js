@@ -1,3 +1,4 @@
+
 //Spade > Heart > Clover > Diamond
 const LOWEST_SUIT=1;
 const HIGHEST_SUIT=4;
@@ -10,33 +11,28 @@ const RANKS={11:"Jack", 12:"Queen", 13:"King", 14:"Ace"};
 const CARD_SPACING=1;
 const RANKING={
   "RoyalFlush": function(hand){
-    return hand[0].rank==10 && isConsecutive(hand) && containsSameSuit(hand);
+    return sameCardAmount(hand, 5, false) && isConsecutive(hand, 10, 15);
   },
   "StraightFlush": function(hand){
-    return isConsecutive(hand) && containsSameSuit(hand);
+    return sameCardAmount(hand, 5, false) && isConsecutive(hand);
   },
   "FourOfAKind": function(hand){
-    var start=0;
-    var end=hand.length;
-    (hand[0].rank!=hand[1].rank) ? start++ : end--;
-    return containsSameRank(hand, start,end);
+    return sameCardAmount(hand, 4, true);
   },
   "FullHouse": function(hand){
-    var i=0;
-    if(hand[0].rank!=hand[2].rank)i++;
-    return containsSameRank(hand, 0,3-i) && containsSameRank(hand, 3-i, hand.length);
+    return sameCardAmount(hand, 3, true, true) && sameCardAmount(hand, 2, true, true);
   },
   "Flush":function(hand){
-    return containsSameSuit(hand);
+    return sameCardAmount(hand, 5, false);
   },
   "Straight": function(hand){
     return isConsecutive(hand);
   },
   "Triple": function(hand){
-    return isConsecutive(hand);
+    return sameCardAmount(hand, 3, true);
   },
   "Pair": function(){
-    return isConsecutive(hand);
+    return sameCardAmount(hand, 2, true);
   }
 };
 const HIERARCHY={
@@ -103,29 +99,35 @@ function shuffleDeck(deck, amount, shuffleMethod){
   }
 }
 
-containsSameRank=function(hand, start, end){
-  var startInd=(start==null)?0:start;
-  var endInd=(end==null)?hand.length-1:end-1;
-  for(var i=startInd; i<endInd; i++){
-    if(hand[i].rank!=hand[i+1].rank) return false;
+sameCardAmount=function(hand, amount, checkingRank, exact){
+  var cardCounter={};
+  for(var i=0; i<hand.length; i++){
+    if(checkingRank){
+      (cardCounter[hand[i].rank]==null) ? cardCounter[hand[i].rank]=1 : cardCounter[hand[i].rank]++;
+    }else{
+      (cardCounter[hand[i].suit]==null) ? cardCounter[hand[i].suit]=1 : cardCounter[hand[i].suit]++;
+    }
   }
-  return true;
-}
-
-containsSameSuit=function(hand, start, end){
-  var startInd=(start==null)?0:start;
-  var endInd=(end==null)?hand.length-1:end-1;
-  for(var i=startInd; i<endInd; i++){
-    if(hand[i].suit!=hand[i+1].suit) return false;
+  for(var card in cardCounter){
+    if(exact){
+      if(cardCounter[card]==amount) return true;
+    }else{
+      if(cardCounter[card]>=amount) return true;
+    }
   }
-  return true;
+  return false;
 }
 
 isConsecutive=function(hand, start, end){
-  var startInd=(start==null)?0:start;
-  var endInd=(end==null)?hand.length-1:end-1;
-  for(var i=startInd; i<endInd; i++){
-    if(hand[i].rank+1!=hand[i+1].rank) return false;
+  var sortedHand=hand.slice(0, hand.length);
+  sortedHand.sort(function(a, b){return a.rank-b.rank});
+  var lowest=(start==null) ? 0 : start;
+  var highest=(end==null) ? sortedHand.length : end;
+  console.log(sortedHand);
+  if(sortedHand[0].rank==lowest && sortedHand[sortedHand.length].rank==highest){
+    for(var i=0; i<sortedHand.length-1; i++){
+      if((sortedHand[i].rank+1)!=sortedHand[i+1].rank) return false;
+    }
   }
   return true;
 }
@@ -138,9 +140,7 @@ getHierarchyRank=function(ranking){
 
 findHandRanking=function(hand, ranking){
   if(ranking==null) ranking=9;
-  if(hand.length==1){
-    return hand[0].rank;
-  }else if(hand.length==2){
+  if(hand.length==2){
     return RANKING[HIERARCHY[2]](hand);
   }else if(hand.length==3){
     return RANKING[HIERARCHY[3]](hand);
@@ -149,7 +149,6 @@ findHandRanking=function(hand, ranking){
   }else{
     return 0;
   }
-
 }
 
 Deck = function(){
