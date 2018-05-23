@@ -31,8 +31,36 @@ const RANKING={
   "Triple": function(hand){
     return sameCardAmount(hand, 3, true);
   },
-  "Pair": function(){
+  "Pair": function(hand){
     return sameCardAmount(hand, 2, true);
+  }
+};
+const COMPARE_HAND={
+  "RoyalFlush": function(hand1, hand2){
+    return hand1[0].suit - hand2[0].suit;
+  },
+  "StraightFlush": function(hand1, hand2){
+    var result=getHighestRank(hand1) - getHighestRank(hand2);
+    return (result!=0)? result:hand1[0].suit - hand2[0].suit;
+  },
+  "FourOfAKind": function(hand1, hand2){
+    return sameCardAmount(hand1,4,true,true,true) - sameCardAmount(hand2,4,true,true,true);
+  },
+  "FullHouse": function(hand1, hand2){
+    return sameCardAmount(hand1,3,true,true,true) - sameCardAmount(hand2,3,true,true,true);
+  },
+  "Flush": function(hand1, hand2){
+    var result=hand1[0].suit - hand2[0].suit;
+    return (result!=0)? result : getHighestRank(hand1) - getHighestRank(hand2);
+  },
+  "Straight": function(hand1, hand2){
+    return getHighestRank(hand1) - getHighestRank(hand2);
+  },
+  "Triple": function(hand1, hand2){
+    return getHighestRank(hand1) - getHighestRank(hand2);
+  },
+  "Pair": function(hand1, hand2){
+    return getHighestRank(hand1) - getHighestRank(hand2);
   }
 };
 const HIERARCHY={
@@ -99,23 +127,17 @@ function shuffleDeck(deck, amount, shuffleMethod){
   }
 }
 
-sameCardAmount=function(hand, amount, checkingRank, exact){
+sameCardAmount=function(hand, amount, checkingRank, exact, getCardRank){
   var cardCounter={};
   for(var i=0; i<hand.length; i++){
-    if(checkingRank){
-      (cardCounter[hand[i].rank]==null) ? cardCounter[hand[i].rank]=1 : cardCounter[hand[i].rank]++;
-    }else{
-      (cardCounter[hand[i].suit]==null) ? cardCounter[hand[i].suit]=1 : cardCounter[hand[i].suit]++;
-    }
+    var key=(checkingRank)?hand[i].rank:hand[i].suit;
+    (cardCounter[key]==null) ? cardCounter[key]=1 : cardCounter[key]++;
   }
-  for(var card in cardCounter){
-    if(exact){
-      if(cardCounter[card]==amount) return true;
-    }else{
-      if(cardCounter[card]>=amount) return true;
-    }
+  for(var cardRank in cardCounter){
+    if((exact && cardCounter[cardRank]==amount) || (!exact && cardCounter[cardRank]>=amount))
+      return (getCardRank) ? cardRank:true;
   }
-  return false;
+  return (getCardRank) ? 0 : false;
 }
 
 isConsecutive=function(hand, start, end){
@@ -124,12 +146,20 @@ isConsecutive=function(hand, start, end){
   var lowest=(start==null) ? 0 : start;
   var highest=(end==null) ? sortedHand.length : end;
   console.log(sortedHand);
-  if(sortedHand[0].rank==lowest && sortedHand[sortedHand.length].rank==highest){
+  if(sortedHand[0].rank==lowest && sortedHand[sortedHand.length-1].rank==highest){
     for(var i=0; i<sortedHand.length-1; i++){
       if((sortedHand[i].rank+1)!=sortedHand[i+1].rank) return false;
     }
   }
   return true;
+}
+
+getHighestRank=function(hand){
+  var highest=0;
+  for(var i=0; i<hand.length; i++){
+    if(hand[i].rank>highest) highest=hand[i].rank;
+  }
+  return highest;
 }
 
 getHierarchyRank=function(ranking){
@@ -204,14 +234,11 @@ initialize=function(){
 document.getElementById("shuffle").onclick=function(){
   shuffleDeck(deckMain, 1,3);
 }
-var pair=[new Card(5,3), new Card (5,2)];
-var trip=[new Card(5,3), new Card (5,2), new Card(5,4)];
 var deckMain;
 Start= function(gameType, shuffled, amount){
   initialize();
   deckMain=initializeDeck(gameType);
-  console.log(RANKING[HIERARCHY[3]](pair));
-  console.log(RANKING[HIERARCHY[2]](trip));
+
   setInterval(function(){ deckMain.displayCards(); }, 2000);
 }
 
