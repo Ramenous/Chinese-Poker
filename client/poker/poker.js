@@ -203,6 +203,35 @@ Deck = function(){
   }
 }
 
+Player=function(name){
+  this.name=name;
+  this.hand=[];
+  this.addCard=function(card){
+    this.hand.push(card);
+  }
+  this.displayHand=function(){
+    var container=document.createElement("DIV");
+    container.class="handContainer";
+    container.backgroundColor="red";
+    for(var i=0; i<this.hand.length; i++){
+      var card= new Image();
+      card.src=this.hand[i].name;
+      container.appendChild(card);
+    }
+    document.body.appendChild(container);
+  }
+  players.push(this);
+}
+
+distributeCards=function(deck, numOfPlayers){
+  console.log(deck);
+  var cards=deck.cards;
+  for(var i=0; i<cards.length; i++){
+    console.log(i);
+    players[i%numOfPlayers].addCard(cards[i]);
+  }
+}
+
 initializeDeck=function(gameType){
   var deck = new Deck();
   for(var i=LOWEST_RANK; i<=HIGHEST_RANK; i++){
@@ -224,7 +253,7 @@ Card = function(rank, suit, display){
   this.display = (display==null) ? rank : display;
   this.width=CARD_WIDTH;
   this.height=CARD_HEIGHT;
-  this.name=""+rank+":"+suit+"";
+  this.name="img/"+rank+"-"+suit+""+".png";
 }
 
 initialize=function(){
@@ -232,13 +261,22 @@ initialize=function(){
 }
 
 document.getElementById("shuffle").onclick=function(){
-  shuffleDeck(deckMain, 1,3);
+  shuffleDeck(deckMain, 5);
 }
 var deckMain;
+var players=[];
 Start= function(gameType, shuffled, amount){
   initialize();
   deckMain=initializeDeck(gameType);
-
+  shuffleDeck(deckMain, 5);
+  new Player("Bob");
+  new Player("Rob");
+  new Player("Dob");
+  new Player("Cob");
+  distributeCards(deckMain, 4);
+  for(var player in players){
+    players[player].displayHand();
+  }
   setInterval(function(){ deckMain.displayCards(); }, 2000);
 }
 
