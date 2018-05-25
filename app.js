@@ -5,6 +5,7 @@ const path = require('path');
 const serv=require('http').Server(app);
 const socketIO = require('socket.io');
 const session = require('express-session');
+const poker=require('pokerGame.js');
 var sessions={};
 
 /*
@@ -59,6 +60,10 @@ serv.listen(5000, function(){
 var players={};
 var rooms={};
 
+function roomEvent(name, roomID, created){
+  return (created) ? name+" has created room "+roomID: name+" has joined room "+roomID;
+}
+
 function validLinkID(){
   var id=Math.floor((Math.random() * 999999) + 111111);
   if(rooms[id]==null){
@@ -74,30 +79,51 @@ io.sockets.on("connection",function(socket){
   socket.on("obtainRooms",function(data,callback){
     callback(rooms);
   });
-  socket.on("joinRoom", function(data){
+  socket.on("getLog", function(data, callback){
+    var room=rooms[data.roomID];
+    var log=room.log;
+    var lastMsgIndex=room.lastLogMsgIndex;
+    callback(log.slice(lastMsgIndex,log.length));
+  });
+  socket.on("joinRoom", function(data, callback){
     var roomID=data.room;
     var name=data.playerName;
-    app.get("/room"+id+"/"+name, function(req, res){
-      console.log(name, " has joined room ", roomID);
-      var currSessionID=req.session.id;
-      var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
-      player.inRoom=true;
-      player.isMaster=false;
-      rooms[roomID].addPlayer(player);
-      res.render("room", {roomID: id, sessionID: currSessionID});
-    });
+    var room=rooms[roomID];
+    var isFull=false;
+    if(room.getPlayerCount()<=room.getMaxPlayers()-1){
+      app.get("/room"+id+"/"+name, function(req, res){
+        console.log(name, " has joined room ", roomID);
+        var currSessionID=req.session.id;
+        var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
+        player.inRoom=true;
+        player.isMaster=false;
+        room.addPlayer(player);
+        if(room.getPlayerCount()==room.getMaxPlayers()){
+
+        }
+        res.render("room", {roomID: id, sessionID: currSessionID});
+      });
+    }else{
+      isFull=true;
+    }
+    callback(isFull);
   });
   socket.on("newRoom",function(data, callback){
     var uniqueID=validLinkID();
     callback(uniqueID);
     var name=data.masterName;
     app.get("/room"+uniqueID+"/"+name, function(req, res){
-      console.log(name, " has created room ", roomID);
+      var newRoomMsg=roomEvent(name, uniqueID, true);
+      var joinRoomMsg=roomEvent(name, uniqueID, false);
+      console.log(newRoomMsg);
+      console.log(joinRoomMsg);
       var currSessionID=req.session.id;
       var newRoom=new Room(uniqueID, data.roomName, data.roomPass, data.numOfPlayers);
       var master=(players[currSessionID]==null) ? new Player(name,currSessionID, uniqueID) : players[currSessionID];
       master.inRoom=master.isMaster=true;
       newRoom.addPlayer(master);
+      newRoom.addRoomEvent(newRoomMsg);
+      newRoom.addRoomEvent(joinRoomMsg);
       res.render("room", {roomID: uniqueID, sessionID: currSessionID});
     });
   });
@@ -111,110 +137,30 @@ Player=function(name, sessionID, roomID){
   players[sessionID]=this;
 }
 
+
 Room=function(id, name, pass, maxPlayers){
   this.id=id;
   this.name=name;
   this.pass=pass;
+  this.maxPlayers=maxPlayers;
   this.players=[];
+  this.log=[];
+  this.startGame=function(){
+    console.log("Game has started!");
+  }
+  this.getPlayerCount=function(){
+    return players.length;
+  }
+  this.getMaxPlayers=function(){
+    return this.maxPlayers;
+  }
+  this.addRoomEvent=function(event){
+    this.log.push(event);
+    this.lastLogMsgIndex=this.log.length;
+  }
   this.addPlayer=function(player){
     if(player.isMaster) this.master=player;
     this.players.push(player);
   }
   rooms[id]=this;
-}
-
-//-----Game functionality
-
-//Spade > Heart > Clover > Diamond
-const LOWEST_SUIT=1;
-const HIGHEST_SUIT=4;
-const LOWEST_RANK=2;
-const HIGHEST_RANK=14;
-const SUITS={1:"Diamond", 2:"Clover", 3:"Heart", 4:"Spade"};
-const RANKS={11:"Jack", 12:"Queen", 13:"King", 14:"Ace"};
-const SHUFFLE_METHOD={
-  //BlackJack Shuffle
-  1: function(deck){
-    var shuffledDeck=[];
-    var boolSwitch=true;
-    var halfSize=deck.length/2;
-    var halfDeck=deck.splice(0, halfSize);
-    var otherHalfDeck=deck.splice(halfSize, deck.length);
-    var consecutivePushes=1;
-    var i=j=0;
-    while(shuffledDeck.length<=52){
-      consecutivePushes=Math.floor((Math.random() * 1) + 0);
-      if(boolSwitch && (i+consecutivePushes)<=halfSize){
-        shuffledDeck.push(halfDeck.splice(i,i+consecutivePushes+1));
-        i+=consecutivePushes;
-      }else{
-        if(!boolSwitch && (j+consecutivePushes)<=halfSize){
-          shuffledDeck.push(otherHalfDeck.splice(j,j+consecutivePushes+1));
-          j+=consecutivePushes;
-        }
-      }
-      boolSwitch=!boolSwitch;
-    }
-    return shuffledDeck;
-  },
-  //Strip Shuffle
-  2: function(deck){
-    var i=j=0;
-    var len=deck.length;
-    var iterations=Math.floor((Math.random() * 10) + 5);
-    while(iterations>0){
-      var i=Math.floor((Math.random() * len * 0.15) + len * 0.05);
-      var j=Math.floor((Math.random() * len * 0.8) + len * 0.9);
-      var strippedDeck=deck.splice(i,j+1);
-      deck.push(strippedDeck);
-      iterations--;
-    }
-    return deck;
-  },
-  3: function(deck){
-
-  }
-}
-initializeDeck=function(gameType){
-  var deck = new Deck();
-  for(var i=LOWEST_RANK; i<=HIGHEST_RANK; i++){
-    for(var j=LOWEST_SUIT; j<=HIGHEST_SUIT; j++){
-      var card;
-      if(gameType==1)
-        card=(i==HIGHEST_RANK) ? new Card(i,j,LOWEST_RANK) : new Card(i, j, j+1);
-      else
-        card=new Card(i,j);
-      deck.add(card);
-    }
-  }
-  return deck;
-}
-
-Deck = function(){
-  this.cards=[];
-  this.add=function(card){
-    this.cards.push(card);
-  }
-}
-
-Card = function(rank, suit, display){
-  this.suit=suit;
-  this.rank=rank;
-  this.display = (display==null) ? rank : display;
-  this.img=suit+"-"+display+".png";
-  this.name=""+rank+":"+suit+"";
-  deck.push(this);
-}
-
-Shuffle=function(deck, amount){
-  var shuffledDeck=deck;
-  for(var i=0; i<amount; i++){
-    var method=Math.floor((Math.random() * 4) + 1);
-    shuffledDeck=SHUFFLE_METHOD[method](shuffledDeck);
-  }
-}
-
-Start= function(gameType){
-  var deck=initializeDeck(gameType);
-
 }

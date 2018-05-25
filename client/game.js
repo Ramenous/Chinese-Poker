@@ -20,16 +20,12 @@ displayNamePrompt=function(namePrompt, currentName){
   currentName.value=name;
 }
 
-rayTest = function(ray){
-  ray.splice(3,6);
-  return ray;
+displayFullMsg=function(){
+  //todo: Make this into a prompt with room name and info;
+  alert("room is full");
 }
 
 window.onload=function(){
-  var d1=[1,2,3,4,5,6,7,8,9,11];
-  var len=d1.length;
-  var d2=d1.splice(2,6);
-  alert(len);
   var roomPrompt=document.getElementById("room");
   var namePrompt=document.getElementById("name");
   var nameMsg=document.getElementById("nameMsg");
@@ -83,8 +79,9 @@ window.onload=function(){
             playerName:name,
             room: data[room].id
           }
-          socket.emit("joinRoom", dataObj);
-          window.location.href="/room"+data[room].id+"/"+name;
+          socket.emit("joinRoom", dataObj,function(data){
+            (!data)?window.location.href="/room"+data[room].id+"/"+name:displayFullMsg();
+          });
         }
       }
       node.appendChild(join);

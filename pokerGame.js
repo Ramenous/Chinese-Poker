@@ -1,14 +1,10 @@
-
 //Spade > Heart > Clover > Diamond
 const LOWEST_SUIT=1;
 const HIGHEST_SUIT=4;
 const LOWEST_RANK=2;
 const HIGHEST_RANK=14;
-const CARD_WIDTH=71;
-const CARD_HEIGHT=96;
-const SUITS={1:"Diamond", 2:"Clover", 3:"Heart", 4:"Spade"};
-const RANKS={11:"Jack", 12:"Queen", 13:"King", 14:"Ace"};
-const CARD_SPACING=1;
+const CARD_WIDTH=69;
+const CARD_HEIGHT=94;
 const RANKING={
   "RoyalFlush": function(hand){
     return sameCardAmount(hand, 5, false) && isConsecutive(hand, 10, 15);
@@ -74,7 +70,9 @@ const HIERARCHY={
   2:"Pair",
   1:"HighCard",
 };
-var CARDS=new Image;
+const GAME_TYPE={
+  "ChinesePoker":1;
+}
 const SHUFFLE_METHOD={
   //Ripple Shuffle
   1: function rippleShuffle(shuffledDeck, deck, boolSwitch){
@@ -117,7 +115,7 @@ const SHUFFLE_METHOD={
   }
 };
 
-function shuffleDeck(deck, amount, shuffleMethod){
+shuffleDeck=function(deck, amount, shuffleMethod){
   var timesShuffled=(amount==null) ? 1 : amount;
   for(var i=0; i<timesShuffled; i++){
     var method=(shuffleMethod==null) ? Math.floor((Math.random() * 3) + 1) : shuffleMethod;
@@ -145,7 +143,6 @@ isConsecutive=function(hand, start, end){
   sortedHand.sort(function(a, b){return a.rank-b.rank});
   var lowest=(start==null) ? 0 : start;
   var highest=(end==null) ? sortedHand.length : end;
-  console.log(sortedHand);
   if(sortedHand[0].rank==lowest && sortedHand[sortedHand.length-1].rank==highest){
     for(var i=0; i<sortedHand.length-1; i++){
       if((sortedHand[i].rank+1)!=sortedHand[i+1].rank) return false;
@@ -181,44 +178,11 @@ findHandRanking=function(hand, ranking){
   }
 }
 
-Deck = function(){
-  this.cards=[];
-  this.add=function(card){
-    this.cards.push(card);
-  }
-  this.displayCards=function(){
-    var ctx=document.getElementById("canvas").getContext('2d');
-    var i=j=0;
-    for(var card in this.cards){
-      if(i%13==0 && i>0){
-        i=0;
-        j++;
-      }
-      var suit=this.cards[card].suit;
-      var rank=this.cards[card].display;
-      ctx.drawImage(CARDS, (rank-LOWEST_RANK)*CARD_WIDTH, (suit-LOWEST_SUIT)*CARD_HEIGHT, CARD_WIDTH, CARD_HEIGHT,
-            i*CARD_WIDTH, j*CARD_HEIGHT, CARD_WIDTH, CARD_HEIGHT);
-      i++;
-    }
-  }
-}
-
 Player=function(name){
   this.name=name;
   this.hand=[];
   this.addCard=function(card){
     this.hand.push(card);
-  }
-  this.displayHand=function(){
-    var container=document.createElement("DIV");
-    container.class="handContainer";
-    container.backgroundColor="red";
-    for(var i=0; i<this.hand.length; i++){
-      var card= new Image();
-      card.src=this.hand[i].name;
-      container.appendChild(card);
-    }
-    document.body.appendChild(container);
   }
   players.push(this);
 }
@@ -230,16 +194,12 @@ distributeCards=function(deck, numOfPlayers){
   }
 }
 
-function hi(){
-  console.log("Hello required worked");
-}
-
 initializeDeck=function(gameType){
   var deck = new Deck();
   for(var i=LOWEST_RANK; i<=HIGHEST_RANK; i++){
     for(var j=LOWEST_SUIT; j<=HIGHEST_SUIT; j++){
       var card;
-      if(gameType==1)
+      if(GAME_TYPE[gameType]==1)
         card=(i==HIGHEST_RANK) ? new Card(i,j,LOWEST_RANK) : new Card(i, j, i+1);
       else
         card=new Card(i,j);
@@ -255,20 +215,12 @@ Card = function(rank, suit, display){
   this.display = (display==null) ? rank : display;
   this.width=CARD_WIDTH;
   this.height=CARD_HEIGHT;
-  this.name="img/"+rank+"-"+suit+""+".png";
+  this.name="img/"+display+"-"+suit+""+".png";
 }
 
-initialize=function(){
-  CARDS.src="img/poker.png";
-}
-
-document.getElementById("shuffle").onclick=function(){
-  shuffleDeck(deckMain, 5);
-}
 var deckMain;
 var players=[];
 Start= function(gameType, shuffled, amount){
-  initialize();
   deckMain=initializeDeck(gameType);
   shuffleDeck(deckMain, 5);
   new Player("Bob");
@@ -282,4 +234,4 @@ Start= function(gameType, shuffled, amount){
   setInterval(function(){ deckMain.displayCards(); }, 2000);
 }
 
-Start(1,true,1);
+//Start(1,true,1);
