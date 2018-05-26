@@ -102,15 +102,18 @@ io.sockets.on("connection",function(socket){
         player.inRoom=true;
         player.isMaster=false;
         room.addPlayer(player);
-        if(room.getPlayerCount()==room.getMaxPlayers()){
+        res.render("room", {roomID: id, sessionID: currSessionID});
+        if(room.getPlayerCount()==room.maxPlayers){
           var players=room.players;
+          var deck=room.createDeck();
+          poker.distributeCards(deck,players,room.maxPlayers);
           for(var player in players){
-            socket.to(player.socketID).emit("startGame", function(){
-
-            });
+            var dataObj={
+              hand:player.hand;
+            }
+            socket.to(player.socketID).emit("startGame", dataObj);
           }
         }
-        res.render("room", {roomID: id, sessionID: currSessionID});
       });
     }else{
       isFull=true;

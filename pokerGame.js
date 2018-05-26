@@ -219,7 +219,6 @@ Card = function(rank, suit, display){
 }
 
 var deckMain;
-var players=[];
 Start= function(gameType, shuffled, amount){
   deckMain=initializeDeck(gameType);
   shuffleDeck(deckMain, 5);
