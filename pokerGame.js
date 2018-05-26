@@ -187,7 +187,7 @@ Player=function(name){
   players.push(this);
 }
 
-distributeCards=function(deck, numOfPlayers){
+distributeCards=function(deck, players,numOfPlayers){
   var cards=deck.cards;
   for(var i=0; i<cards.length; i++){
     players[i%numOfPlayers].addCard(cards[i]);
@@ -227,7 +227,7 @@ Start= function(gameType, shuffled, amount){
   new Player("Rob");
   new Player("Dob");
   new Player("Cob");
-  distributeCards(deckMain, 4);
+  distributeCards(deckMain, players, 4);
   for(var player in players){
     players[player].displayHand();
   }

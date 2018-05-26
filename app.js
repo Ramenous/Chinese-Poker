@@ -6,6 +6,9 @@ const serv=require('http').Server(app);
 const socketIO = require('socket.io');
 const session = require('express-session');
 const poker=require('pokerGame.js');
+const GAME_TYPE={
+  1:"ChinesePoker",
+}
 var sessions={};
 
 /*
@@ -90,16 +93,22 @@ io.sockets.on("connection",function(socket){
     var name=data.playerName;
     var room=rooms[roomID];
     var isFull=false;
+    socket.join(roomID);
     if(room.getPlayerCount()<=room.getMaxPlayers()-1){
       app.get("/room"+id+"/"+name, function(req, res){
         console.log(name, " has joined room ", roomID);
         var currSessionID=req.session.id;
-        var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
+        var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID, socket.id) : players[currSessionID];
         player.inRoom=true;
         player.isMaster=false;
         room.addPlayer(player);
         if(room.getPlayerCount()==room.getMaxPlayers()){
+          var players=room.players;
+          for(var player in players){
+            socket.to(player.socketID).emit("startGame", function(){
 
+            });
+          }
         }
         res.render("room", {roomID: id, sessionID: currSessionID});
       });
@@ -129,11 +138,16 @@ io.sockets.on("connection",function(socket){
   });
 });
 
-Player=function(name, sessionID, roomID){
+Player=function(name, sessionID, roomID, socketID){
   this.name=name;
   this.inRoom=true;
   this.room=roomID;
   this.sessionID=sessionID;
+  this.socketID=socketID;
+  this.hand=[];
+  this.addCard=function(card){
+    hand.push(card);
+  }
   players[sessionID]=this;
 }
 
@@ -145,8 +159,10 @@ Room=function(id, name, pass, maxPlayers){
   this.maxPlayers=maxPlayers;
   this.players=[];
   this.log=[];
-  this.startGame=function(){
-    console.log("Game has started!");
+  this.createDeck=function(){
+    var deck=poker.initializeDeck();
+    poker.shuffleDeck(deck, 5);
+    return deck;
   }
   this.getPlayerCount=function(){
     return players.length;
