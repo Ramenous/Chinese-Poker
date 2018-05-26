@@ -71,8 +71,8 @@ const HIERARCHY={
   1:"HighCard",
 };
 const GAME_TYPE={
-  "ChinesePoker":1;
-}
+  "ChinesePoker":1
+};
 const SHUFFLE_METHOD={
   //Ripple Shuffle
   1: function rippleShuffle(shuffledDeck, deck, boolSwitch){

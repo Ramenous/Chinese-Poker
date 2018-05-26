@@ -5,7 +5,7 @@ const path = require('path');
 const serv=require('http').Server(app);
 const socketIO = require('socket.io');
 const session = require('express-session');
-const poker=require('pokerGame.js');
+const poker=require('./client/pokerGame.js');
 const GAME_TYPE={
   1:"ChinesePoker",
 }
@@ -39,7 +39,7 @@ app.get("/", function(req, res){
     console.log("New User has connected - Session: ", currSessionID);
     res.render("test");
   }else{
-    if(players[currSessionID].inRoom){
+    if(players[currSessionID]!=null && players[currSessionID].inRoom){
       res.render("room", {roomID: players[currSessionID].room, sessionID: currSessionID});
     }else{
       res.render("test");
@@ -85,8 +85,8 @@ io.sockets.on("connection",function(socket){
   socket.on("getLog", function(data, callback){
     var room=rooms[data.roomID];
     var log=room.log;
-    var lastMsgIndex=room.lastLogMsgIndex;
-    callback(log.slice(lastMsgIndex,log.length));
+    callback(log.slice(room.lastLogMsgIndex,log.length));
+    room.lastLogMsgIndex=log.length;
   });
   socket.on("joinRoom", function(data, callback){
     var roomID=data.room;
@@ -94,7 +94,9 @@ io.sockets.on("connection",function(socket){
     var room=rooms[roomID];
     var isFull=false;
     socket.join(roomID);
-    if(room.getPlayerCount()<=room.getMaxPlayers()-1){
+    console.log("players",room.getPlayerCount());
+    console.log("max",room.getMaxPlayers());
+    if(room.getPlayerCount()<room.getMaxPlayers()){
       app.get("/room"+id+"/"+name, function(req, res){
         console.log(name, " has joined room ", roomID);
         var currSessionID=req.session.id;
@@ -109,8 +111,8 @@ io.sockets.on("connection",function(socket){
           poker.distributeCards(deck,players,room.maxPlayers);
           for(var player in players){
             var dataObj={
-              hand:player.hand;
-            }
+              hand:player.hand
+            };
             socket.to(player.socketID).emit("startGame", dataObj);
           }
         }
@@ -124,6 +126,7 @@ io.sockets.on("connection",function(socket){
     var uniqueID=validLinkID();
     callback(uniqueID);
     var name=data.masterName;
+    socket.join(uniqueID);
     app.get("/room"+uniqueID+"/"+name, function(req, res){
       var newRoomMsg=roomEvent(name, uniqueID, true);
       var joinRoomMsg=roomEvent(name, uniqueID, false);
@@ -134,8 +137,7 @@ io.sockets.on("connection",function(socket){
       var master=(players[currSessionID]==null) ? new Player(name,currSessionID, uniqueID) : players[currSessionID];
       master.inRoom=master.isMaster=true;
       newRoom.addPlayer(master);
-      newRoom.addRoomEvent(newRoomMsg);
-      newRoom.addRoomEvent(joinRoomMsg);
+      newRoom.addRoomEvent([newRoomMsg,joinRoomMsg]);
       res.render("room", {roomID: uniqueID, sessionID: currSessionID});
     });
   });
@@ -168,14 +170,18 @@ Room=function(id, name, pass, maxPlayers){
     return deck;
   }
   this.getPlayerCount=function(){
-    return players.length;
+    return this.players.length;
   }
   this.getMaxPlayers=function(){
     return this.maxPlayers;
   }
   this.addRoomEvent=function(event){
-    this.log.push(event);
     this.lastLogMsgIndex=this.log.length;
+    if(Array.isArray(event)){
+      this.log=this.log.concat(event);
+    }else{
+      this.log.push(event);
+    }
   }
   this.addPlayer=function(player){
     if(player.isMaster) this.master=player;

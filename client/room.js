@@ -11,9 +11,9 @@ setInterval(function(){
   socket.emit("getLog",{roomID:parseInt(ROOM)}, function(data){
     for(var roomEvent in data){
       var span = document.createElement("SPAN");
-      var t = document.createTextNode(roomEvent);
+      var t = document.createTextNode(data[roomEvent]);
       span.appendChild(t);
       LOG.appendChild(span);
     }
   });
-}, 1000);
+}, 60000);
