@@ -60,6 +60,7 @@ window.onload=function(){
     socket.emit("newRoom",dataObj,function(data){
       window.location.href="/room"+data+"/"+name;
     });
+    roomPrompt.style.display="none";
   }
   document.getElementById("cancelRoom").onclick=function(){
     roomPrompt.style.display="none";
@@ -77,10 +78,10 @@ window.onload=function(){
         }else{
           var dataObj={
             playerName:name,
-            room: data[room].id
-          }
+            roomID: data[room].id
+          };
           socket.emit("joinRoom", dataObj,function(data){
-            (!data)?window.location.href="/room"+data[room].id+"/"+name:displayFullMsg();
+            (!data.roomFull)?window.location.href="/room"+data.room+"/"+name:displayFullMsg();
           });
         }
       }

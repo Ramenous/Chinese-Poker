@@ -4,16 +4,17 @@ const ROOM=document.getElementById("roomID").innerHTML;
 const LOG=document.getElementById("roomLog");
 var hand;
 socket.on("startGame", function(data){
-  hand=data;
-  console.log("PlayerHand:",data);
+  hand=data.hand;
+  console.log("PlayerHand:",hand);
 });
-setInterval(function(){
-  socket.emit("getLog",{roomID:parseInt(ROOM)}, function(data){
-    for(var roomEvent in data){
-      var span = document.createElement("SPAN");
-      var t = document.createTextNode(data[roomEvent]);
-      span.appendChild(t);
-      LOG.appendChild(span);
-    }
-  });
-}, 60000);
+socket.emit("assignChannel", {roomID: ROOM});
+socket.on("updateLog", function(data){
+  for(var roomEvent in data){
+    var span = document.createElement("SPAN");
+    var lineBreak = document.createElement("BR");
+    var t = document.createTextNode(data[roomEvent]);
+    span.appendChild(t);
+    span.appendChild(lineBreak);
+    LOG.appendChild(span);
+  }
+});
