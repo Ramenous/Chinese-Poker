@@ -80,7 +80,7 @@ window.onload=function(){
             playerName:name,
             roomID: data[room].id
           };
-          socket.emit("joinRoom", dataObj,function(data){
+          socket.emit("joinRoom", dataObj, function(data){
             (!data.roomFull)?window.location.href="/room"+data.room+"/"+name:displayFullMsg();
           });
         }

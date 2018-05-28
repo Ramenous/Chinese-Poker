@@ -10,7 +10,9 @@ const GAME_TYPE={
   1:"ChinesePoker",
 }
 var sessions={};
-
+var playerSockets={};
+var players={};
+var rooms={};
 /*
   Set up middleware function between these two paths
   in this case, it's the client directory with all our html,
@@ -60,9 +62,6 @@ serv.listen(5000, function(){
   console.log("Server has started on port 5000");
 });
 
-var players={};
-var rooms={};
-
 function roomEvent(name, roomID, created){
   return (created) ? name+" has created room "+roomID: name+" has joined room "+roomID;
 }
@@ -84,17 +83,41 @@ function createRoom(socket){
     var newRoomMsg=roomEvent(name, uniqueID, true);
     var joinRoomMsg=roomEvent(name, uniqueID, false);
     app.get("/room"+uniqueID+"/"+name, function(req, res){
-      console.log(newRoomMsg);
-      console.log(joinRoomMsg);
       var currSessionID=req.session.id;
-      var newRoom=new Room(uniqueID, data.roomName, data.roomPass, data.numOfPlayers);
-      var master=(players[currSessionID]==null) ? new Player(name,currSessionID, uniqueID) : players[currSessionID];
-      master.inRoom=master.isMaster=true;
-      newRoom.addPlayer(master);
-      newRoom.addRoomEvent([newRoomMsg, joinRoomMsg]);
+      if(typeof rooms[uniqueID] != "object"){
+        console.log(newRoomMsg);
+        console.log(joinRoomMsg);
+        var newRoom=new Room(uniqueID, data.roomName, data.roomPass, data.numOfPlayers);
+        var master=(players[currSessionID]==null) ? new Player(name,currSessionID, uniqueID) : players[currSessionID];
+        master.inRoom=master.isMaster=true;
+        newRoom.addPlayer(master);
+        newRoom.addRoomEvent([newRoomMsg, joinRoomMsg]);
+      }
       res.render("room", {roomID: uniqueID, sessionID: currSessionID});
     });
   });
+}
+
+function getPlayerHand(socket){
+  socket.on("getPlayerHand", function(data, callback){
+    var roomID=data.roomID;
+    var playerSession=data.playerSession;
+    if(rooms[roomID].startedGame){
+      callback(players[playerSession].hand);
+    }
+  });
+}
+
+function startGame(socket, room){
+  var players=room.players;
+  var deck=room.createDeck();
+  poker.distributeCards(deck, players, room.maxPlayers);
+  room.startedGame=true;
+  for(var player in players){
+    var socketID=players[player].socketID;
+    if(socketID!=null)
+      io.to(socketID).emit("distributeHand", players[player].hand);
+  }
 }
 
 function joinRoom(socket){
@@ -105,15 +128,23 @@ function joinRoom(socket){
     var isFull=false;
     if(room.getPlayerCount()<room.maxPlayers){
       app.get("/room"+roomID+"/"+name, function(req, res){
-        var msg=name+ " has joined room "+ roomID;
-        console.log(msg);
         var currSessionID=req.session.id;
-        var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
-        player.inRoom=true;
-        player.isMaster=false;
-        room.addPlayer(player);
-        room.addRoomEvent(msg);
-        io.to(roomID).emit("updateLog", [msg]);
+        var player=players[currSessionID];
+        if(player==null || (player!=null && !player.inRoom)){
+          var msg=roomEvent(name, roomID, false);
+          console.log(msg);
+          player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
+          player.inRoom=true;
+          player.isMaster=false;
+          room.addPlayer(player);
+          room.addRoomEvent(msg);
+          io.to(roomID).emit("updateLog", [msg]);
+          if(room.getPlayerCount()==room.maxPlayers){
+            startGame(socket, room);
+          }
+        }else if(player.roomID!=roomID){
+          //redirect to right room
+        }
         res.render("room", {roomID: roomID, sessionID: currSessionID});
       });
     }else{
@@ -126,8 +157,22 @@ function joinRoom(socket){
 function assignChannel(socket){
   socket.on("assignChannel",function(data){
     var roomID=data.roomID;
+    var player=players[data.playerSession];
+    playerSockets[socket.id]=player;
+    player.socketID=socket.id;
     socket.join(roomID);
     socket.emit("updateLog", rooms[roomID].log);
+  });
+}
+
+function socketDisconnect(socket){
+  socket.on("disconnect", function(){
+    var id=socket.id;
+    var player=playerSockets[id];
+    if(player!=null){
+      delete player.socketID;
+      delete playerSockets[id];
+    }
   });
 }
 
@@ -140,16 +185,18 @@ io.sockets.on("connection",function(socket){
   assignChannel(socket);
   joinRoom(socket);
   createRoom(socket);
+  getPlayerHand(socket);
+  //socketDisconnect(socket);
 });
 
 Player=function(name, sessionID, roomID){
   this.name=name;
   this.inRoom=true;
-  this.room=roomID;
+  this.roomID=roomID;
   this.sessionID=sessionID;
   this.hand=[];
   this.addCard=function(card){
-    hand.push(card);
+    this.hand.push(card);
   }
   players[sessionID]=this;
 }
@@ -162,8 +209,9 @@ Room=function(id, name, pass, maxPlayers){
   this.maxPlayers=maxPlayers;
   this.players=[];
   this.log=[];
+  this.startedGame=false;
   this.createDeck=function(){
-    var deck=poker.initializeDeck();
+    var deck=poker.initializeDeck(GAME_TYPE[1]);
     poker.shuffleDeck(deck, 5);
     return deck;
   }

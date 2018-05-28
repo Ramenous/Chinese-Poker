@@ -194,6 +194,17 @@ distributeCards=function(deck, players,numOfPlayers){
   }
 }
 
+hi=function(){
+  return 1;
+}
+
+Deck = function(){
+  this.cards=[];
+  this.add=function(card){
+    this.cards.push(card);
+  }
+}
+
 initializeDeck=function(gameType){
   var deck = new Deck();
   for(var i=LOWEST_RANK; i<=HIGHEST_RANK; i++){
@@ -232,5 +243,9 @@ Start= function(gameType, shuffled, amount){
   }
   setInterval(function(){ deckMain.displayCards(); }, 2000);
 }
-
+module.exports={
+  initializeDeck: initializeDeck,
+  shuffleDeck: shuffleDeck,
+  distributeCards: distributeCards
+};
 //Start(1,true,1);
