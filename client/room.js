@@ -5,17 +5,22 @@ const PLAYER_INFO={playerSession:SESSION, roomID: ROOM};
 const LOG=document.getElementById("roomLog");
 const HAND=document.getElementById("hand");
 var selectedCards={};
+function assignCardSelection(element,card){
+    element.onclick=function(e){
+      card.selected=!card.selected;
+      (card.selected)?selectedCards[card.name]=card:delete selectedCards[card.name];
+  }
+}
 function loadDeck(hand){
   for(var c in hand){
     var cardElement=new Image();
     var card=hand[c];
     cardElement.src=card.src;
-    console.log(card.src);
-    console.log(cardElement);
-    cardElement.onmousedown=function(e){
-      card.selected=!card.selected;
-      (card.selected)?selectedCards[card.name]=card:delete selectedCards[card.name];
-    }
+    cardElement.id=card.name;
+    console.log(card.name);
+    console.log("Ze card", card);
+    console.log("ze element", cardElement);
+    assignCardSelection(cardElement,card);
     HAND.appendChild(cardElement);
   }
 }
