@@ -166,6 +166,19 @@ function assignChannel(socket){
     socket.emit("updateLog", rooms[roomID].log);
   });
 }
+function verifyHand(hand, sessionID){
+  var realPlayerHand=players[sessionID].hand;
+  
+}
+function validateHand(socket){
+  socket.on("submitHand", function(data, callback){
+    var handArray=Object.values(data.playerHand);
+    var handLength=handArray.length;
+    if(handLength!=4 & handLength<6 && verifyHand(hand, data.playerSession)){
+
+    }
+  });
+}
 
 function socketDisconnect(socket){
   socket.on("disconnect", function(){
@@ -188,6 +201,7 @@ io.sockets.on("connection",function(socket){
   joinRoom(socket);
   createRoom(socket);
   getPlayerHand(socket);
+  validateHand(socket);
   //socketDisconnect(socket);
 });
 
@@ -212,11 +226,6 @@ Room=function(id, name, pass, maxPlayers){
   this.players=[];
   this.log=[];
   this.startedGame=false;
-  this.createDeck=function(){
-    var deck=poker.initializeDeck(GAME_TYPE[1]);
-    poker.shuffleDeck(deck, 5);
-    return deck;
-  }
   this.getPlayerCount=function(){
     return this.players.length;
   }

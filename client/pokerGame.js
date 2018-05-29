@@ -153,8 +153,8 @@ isConsecutive=function(hand, start, end){
 
 getHighestRank=function(hand){
   var highest=0;
-  for(var i=0; i<hand.length; i++){
-    if(hand[i].rank>highest) highest=hand[i].rank;
+  for(var card in hand){
+    if(hand[card].rank>highest) highest=hand[card].rank;
   }
   return highest;
 }
@@ -178,24 +178,11 @@ findHandRanking=function(hand, ranking){
   }
 }
 
-Player=function(name){
-  this.name=name;
-  this.hand=[];
-  this.addCard=function(card){
-    this.hand.push(card);
-  }
-  players.push(this);
-}
-
 distributeCards=function(deck, players,numOfPlayers){
   var cards=deck.cards;
   for(var i=0; i<cards.length; i++){
     players[i%numOfPlayers].addCard(cards[i]);
   }
-}
-
-hi=function(){
-  return 1;
 }
 
 Deck = function(){
@@ -223,31 +210,15 @@ initializeDeck=function(gameType){
 Card = function(rank, suit, display){
   this.suit=suit;
   this.rank=rank;
-  this.display = (display==null) ? rank : display;
+  this.display = ((display==null) ? rank : display)+"-"+suit;
   this.width=CARD_WIDTH;
   this.height=CARD_HEIGHT;
   this.selected=false;
-  this.name=display+"-"+suit;
   this.src="/client/img/"+this.name+".png";
 }
 
-var deckMain;
-Start= function(gameType, shuffled, amount){
-  deckMain=initializeDeck(gameType);
-  shuffleDeck(deckMain, 5);
-  new Player("Bob");
-  new Player("Rob");
-  new Player("Dob");
-  new Player("Cob");
-  distributeCards(deckMain, players, 4);
-  for(var player in players){
-    players[player].displayHand();
-  }
-  setInterval(function(){ deckMain.displayCards(); }, 2000);
-}
 module.exports={
   initializeDeck: initializeDeck,
   shuffleDeck: shuffleDeck,
   distributeCards: distributeCards
 };
-//Start(1,true,1);

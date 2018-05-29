@@ -5,37 +5,56 @@ const PLAYER_INFO={playerSession:SESSION, roomID: ROOM};
 const LOG=document.getElementById("roomLog");
 const HAND=document.getElementById("hand");
 var selectedCards={};
+var playerHand=[];
 function assignCardSelection(element,card){
-    element.onclick=function(e){
-      card.selected=!card.selected;
-      (card.selected)?selectedCards[card.name]=card:delete selectedCards[card.name];
+  element.onclick=function(e){
+    card.selected=!card.selected;
+    (card.selected)?selectedCards[card.display]=card:delete selectedCards[card.display];
   }
+}
+function obtainHand(hand){
+  playerHand=hand;
+  loadDeck(hand);
 }
 function loadDeck(hand){
   for(var c in hand){
     var cardElement=new Image();
     var card=hand[c];
     cardElement.src=card.src;
-    cardElement.id=card.name;
-    console.log(card.name);
+    cardElement.id=card.display;
+    console.log(card.display);
     console.log("Ze card", card);
     console.log("ze element", cardElement);
     assignCardSelection(cardElement,card);
     HAND.appendChild(cardElement);
   }
 }
-console.log(PLAYER_INFO);
+
+function submitHand(hand){
+  var dataObj={
+    playerHand: hand,
+    playerSession: SESSION,
+    roomID: ROOM
+  }
+  socket.emit("submitHand", dataObj, function(data){
+
+  });
+}
+
 socket.emit("assignChannel", PLAYER_INFO);
 socket.emit("getPlayerHand", PLAYER_INFO, function(data){
-  hand=data;
-  loadDeck(hand);
-  console.log("PlayerHand:",data);
+  obtainHand(data);
 });
 socket.on("distributeHand", function(data){
-  hand=data;
-  loadDeck(hand);
-  console.log("PLAYERHAND", data);
+  obtainHand(data);
 });
+window.onload=function(){
+  var addSubHandButton=document.getElementById("addSubHand");
+
+  document.getElementById("submitHand").onclick=function(){
+
+  }
+}
 socket.on("updateLog", function(data){
   for(var roomEvent in data){
     var span = document.createElement("SPAN");
