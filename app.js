@@ -166,17 +166,36 @@ function assignChannel(socket){
     socket.emit("updateLog", rooms[roomID].log);
   });
 }
-function verifyHand(hand, sessionID){
-  var realPlayerHand=players[sessionID].hand;
-  
+function verifyHand(hand, player){
+  var realPlayerHand=player.hand;
+  for(var realCard in realPlayerHand){
+    var containsCard=false;
+    for(var card in hand){
+      if(hand[card].display==realPlayerHand[realCard].display)
+        containsCard=true;
+    }
+    if(!containsCard) return false;
+  }
+  return true;
 }
 function validateHand(socket){
   socket.on("submitHand", function(data, callback){
     var handArray=Object.values(data.playerHand);
     var handLength=handArray.length;
-    if(handLength!=4 & handLength<6 && verifyHand(hand, data.playerSession)){
-
+    var room=rooms[data.roomID];
+    var player=players[data.playerSession];
+    var result=1
+    if(handLength!=4 & handLength<6){
+      if(verifyHand(hand, player)){
+        if(poker.isHigherRanking(handArray,room.getLastHand())){
+          player.removeCards(handArray);
+          result=3;
+        }
+      }else{
+        result=2;
+      }
     }
+    callback({handResult: result, playerHand:player.hand});
   });
 }
 
@@ -214,6 +233,15 @@ Player=function(name, sessionID, roomID){
   this.addCard=function(card){
     this.hand.push(card);
   }
+  this.removeCards=function(hand){
+    for(var i=0; i<hand.length; i++){
+      for(var j=0; j<this.hand.length;j++){
+        if(hand[i].display==this.hand[j].display){
+          this.hand.splice(j,j+1);
+        }
+      }
+    }
+  }
   players[sessionID]=this;
 }
 
@@ -225,6 +253,7 @@ Room=function(id, name, pass, maxPlayers){
   this.maxPlayers=maxPlayers;
   this.players=[];
   this.log=[];
+  this.cardPile=[];
   this.startedGame=false;
   this.getPlayerCount=function(){
     return this.players.length;
@@ -240,6 +269,12 @@ Room=function(id, name, pass, maxPlayers){
   this.addPlayer=function(player){
     if(player.isMaster) this.master=player;
     this.players.push(player);
+  }
+  this.addHand=function(hand){
+    this.cardPile.push(hand);
+  }
+  this.getLastHand=function(){
+    return cardPile[cardPile.length-1];
   }
   rooms[id]=this;
 }

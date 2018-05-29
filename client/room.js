@@ -30,6 +30,14 @@ function loadDeck(hand){
   }
 }
 
+function clearSubHand(){
+
+}
+function resetHand(hand){
+  loadDeck(hand);
+  clearSubHand();
+}
+
 function submitHand(hand){
   var dataObj={
     playerHand: hand,
@@ -37,7 +45,18 @@ function submitHand(hand){
     roomID: ROOM
   }
   socket.emit("submitHand", dataObj, function(data){
-
+    var result=data.handResult;
+    var playerHand=data.playerHand;
+    switch(result){
+      case 1:
+        console.log("Incorrect hand. Match with current hand pile");
+      case 2:
+        console.log("Unauthorized modification to hand, reverting to original hand");
+        resetHand(playerHand);
+      case 3:
+        console.log("Successfully submitted hand");
+        break;
+    }
   });
 }
 

@@ -178,6 +178,12 @@ findHandRanking=function(hand, ranking){
   }
 }
 
+function isHigherRanking(hand1, hand2){
+  var hand1Rank=findHandRanking(hand1);
+  var hand2Rank=findHandRanking(hand2);
+  return (hand1Rank==hand2Rank) ?COMPARE_HAND[HIERARCHY[hand1Rank]](hand1,hand2): hand1Rank>hand2Rank;
+}
+
 distributeCards=function(deck, players,numOfPlayers){
   var cards=deck.cards;
   for(var i=0; i<cards.length; i++){
