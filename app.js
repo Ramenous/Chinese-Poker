@@ -188,13 +188,15 @@ function validateHand(socket){
     if(handLength!=4 & handLength<6){
       if(verifyHand(hand, player)){
         if(poker.isHigherRanking(handArray,room.getLastHand())){
-          player.removeCards(handArray);
+          var removedCards=player.removeCards(handArray);
+          room.addToPile(removedCards);
           result=3;
         }
       }else{
         result=2;
       }
     }
+    io.to(roomID).emit("updatePile", room.getLastHand());
     callback({handResult: result, playerHand:player.hand});
   });
 }
@@ -234,13 +236,15 @@ Player=function(name, sessionID, roomID){
     this.hand.push(card);
   }
   this.removeCards=function(hand){
+    var removed=[];
     for(var i=0; i<hand.length; i++){
       for(var j=0; j<this.hand.length;j++){
         if(hand[i].display==this.hand[j].display){
-          this.hand.splice(j,j+1);
+          removed=removed.concat(this.hand.splice(j,j+1));
         }
       }
     }
+    return removed;
   }
   players[sessionID]=this;
 }
@@ -266,12 +270,12 @@ Room=function(id, name, pass, maxPlayers){
       this.log.push(event);
     }
   }
+  this.addToPile=function(hand){
+    this.cardPile.push(hand);
+  }
   this.addPlayer=function(player){
     if(player.isMaster) this.master=player;
     this.players.push(player);
-  }
-  this.addHand=function(hand){
-    this.cardPile.push(hand);
   }
   this.getLastHand=function(){
     return cardPile[cardPile.length-1];

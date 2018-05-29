@@ -4,6 +4,7 @@ const ROOM=document.getElementById("roomID").innerHTML;
 const PLAYER_INFO={playerSession:SESSION, roomID: ROOM};
 const LOG=document.getElementById("roomLog");
 const HAND=document.getElementById("hand");
+const PILE=document.getElementById("pile");
 var selectedCards={};
 var playerHand=[];
 function assignCardSelection(element,card){
@@ -14,9 +15,9 @@ function assignCardSelection(element,card){
 }
 function obtainHand(hand){
   playerHand=hand;
-  loadDeck(hand);
+  loadHand(hand);
 }
-function loadDeck(hand){
+function loadHand(hand, forPile){
   for(var c in hand){
     var cardElement=new Image();
     var card=hand[c];
@@ -26,15 +27,19 @@ function loadDeck(hand){
     console.log("Ze card", card);
     console.log("ze element", cardElement);
     assignCardSelection(cardElement,card);
-    HAND.appendChild(cardElement);
+    if(forPile!=null)?PILE.appendChild(cardElement):HAND.appendChild(cardElement);
   }
 }
 
 function clearSubHand(){
 
 }
+function updatePile(hand){
+  loadHand(hand, true);
+}
 function resetHand(hand){
-  loadDeck(hand);
+  playerHand=hand;
+  loadHand(hand);
   clearSubHand();
 }
 
@@ -67,11 +72,14 @@ socket.emit("getPlayerHand", PLAYER_INFO, function(data){
 socket.on("distributeHand", function(data){
   obtainHand(data);
 });
+socket.on("updatePile", function(data){
+  updatePile(data);
+});
 window.onload=function(){
   var addSubHandButton=document.getElementById("addSubHand");
 
   document.getElementById("submitHand").onclick=function(){
-
+    submitHand(Object.values(playerHand));
   }
 }
 socket.on("updateLog", function(data){
