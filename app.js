@@ -19,6 +19,8 @@ var rooms={};
   css, etc stuff.
 */
 app.use("/client", express.static(__dirname+"/client"));
+app.use("/client/img", express.static(__dirname+"/client"));
+//app.set("imgs", path.join(__dirname, "/img"));
 app.set('trust proxy', 1); // trust first proxy
 app.use(session({
   secret: 'keyboard cat',

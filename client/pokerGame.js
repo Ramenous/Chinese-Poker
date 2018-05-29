@@ -226,7 +226,9 @@ Card = function(rank, suit, display){
   this.display = (display==null) ? rank : display;
   this.width=CARD_WIDTH;
   this.height=CARD_HEIGHT;
-  this.name="img/"+display+"-"+suit+""+".png";
+  this.selected=false;
+  this.name=display+"-"+suit;
+  this.src="/client/img/"+this.name+".png";
 }
 
 var deckMain;
