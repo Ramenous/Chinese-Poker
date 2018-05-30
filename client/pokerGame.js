@@ -167,7 +167,9 @@ getHierarchyRank=function(ranking){
 
 findHandRanking=function(hand, ranking){
   if(ranking==null) ranking=9;
-  if(hand.length==2){
+  if(hand.length==1){
+    return hand[0].rank;
+  }else if(hand.length==2){
     return RANKING[HIERARCHY[2]](hand);
   }else if(hand.length==3){
     return RANKING[HIERARCHY[3]](hand);
@@ -179,9 +181,12 @@ findHandRanking=function(hand, ranking){
 }
 
 function isHigherRanking(hand1, hand2){
+  if(hand2==null) return true;
   var hand1Rank=findHandRanking(hand1);
   var hand2Rank=findHandRanking(hand2);
-  return (hand1Rank==hand2Rank) ?COMPARE_HAND[HIERARCHY[hand1Rank]](hand1,hand2): hand1Rank>hand2Rank;
+  console.log("Hand1 ranking: ",hand1Rank);
+  console.log("Hand2 ranking:", hand2Rank);
+  return (hand1Rank==hand2Rank) ?COMPARE_HAND[HIERARCHY[hand1Rank]](hand1,hand2)>1: hand1Rank>hand2Rank;
 }
 
 distributeCards=function(deck, players,numOfPlayers){
@@ -220,11 +225,12 @@ Card = function(rank, suit, display){
   this.width=CARD_WIDTH;
   this.height=CARD_HEIGHT;
   this.selected=false;
-  this.src="/client/img/"+this.name+".png";
+  this.src="/client/img/"+this.display+".png";
 }
 
 module.exports={
   initializeDeck: initializeDeck,
   shuffleDeck: shuffleDeck,
-  distributeCards: distributeCards
+  distributeCards: distributeCards,
+  isHigherRanking: isHigherRanking
 };

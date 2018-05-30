@@ -168,11 +168,12 @@ function assignChannel(socket){
 }
 function verifyHand(hand, player){
   var realPlayerHand=player.hand;
-  for(var realCard in realPlayerHand){
+  for(var card in hand){
     var containsCard=false;
-    for(var card in hand){
-      if(hand[card].display==realPlayerHand[realCard].display)
-        containsCard=true;
+    for(var realCard in realPlayerHand){
+      console.log("Real: ",realPlayerHand[realCard].display, "submited",hand[card].display);
+      console.log("TRU?",hand[card].display==realPlayerHand[realCard].display);
+      if(hand[card].display==realPlayerHand[realCard].display) containsCard=true;
     }
     if(!containsCard) return false;
   }
@@ -184,19 +185,29 @@ function validateHand(socket){
     var handLength=handArray.length;
     var room=rooms[data.roomID];
     var player=players[data.playerSession];
-    var result=1
+    var result=1;
+    console.log("hand: ", handArray);
     if(handLength!=4 & handLength<6){
-      if(verifyHand(hand, player)){
-        if(poker.isHigherRanking(handArray,room.getLastHand())){
+      console.log("Hand is within correct lengths");
+      if(verifyHand(handArray, player)){
+        console.log("Hand has not been modified");
+        if(poker.isHigherRanking(handArray, room.getLastHand())){
+          console.log("Is higher ranking, can be added to pile");
+          console.log("Before cards", player.hand.length);
           var removedCards=player.removeCards(handArray);
+          console.log("After cards", player.hand.length);
+          console.log("REMOVED CARDs",removedCards);
           room.addToPile(removedCards);
           result=3;
+        }else{
+          result=4;
         }
       }else{
         result=2;
       }
     }
-    io.to(roomID).emit("updatePile", room.getLastHand());
+    console.log("RESULT", result);
+    if(result==3)io.to(data.roomID).emit("updatePile", room.getLastHand());
     callback({handResult: result, playerHand:player.hand});
   });
 }
@@ -235,12 +246,17 @@ Player=function(name, sessionID, roomID){
   this.addCard=function(card){
     this.hand.push(card);
   }
-  this.removeCards=function(hand){
+  this.removeCards=function(cards){
     var removed=[];
-    for(var i=0; i<hand.length; i++){
+    //console.log(cards);
+    for(var i=0; i<cards.length; i++){
       for(var j=0; j<this.hand.length;j++){
-        if(hand[i].display==this.hand[j].display){
-          removed=removed.concat(this.hand.splice(j,j+1));
+        //console.log("remiving card:",cards[i].display, "hand card:",this.hand[j].display, "eqla?",cards[i].display==this.hand[j].display);
+        if(cards[i].display==this.hand[j].display){
+          console.log("before,",this.hand.length);
+          removed=removed.concat(this.hand.splice(j,1));
+          console.log("after", this.hand.length);
+          break;
         }
       }
     }
@@ -259,6 +275,11 @@ Room=function(id, name, pass, maxPlayers){
   this.log=[];
   this.cardPile=[];
   this.startedGame=false;
+  this.createDeck=function(){
+    var deck=poker.initializeDeck(GAME_TYPE[1]);
+    poker.shuffleDeck(deck, 5);
+    return deck;
+  }
   this.getPlayerCount=function(){
     return this.players.length;
   }
@@ -278,7 +299,7 @@ Room=function(id, name, pass, maxPlayers){
     this.players.push(player);
   }
   this.getLastHand=function(){
-    return cardPile[cardPile.length-1];
+    return this.cardPile[this.cardPile.length-1];
   }
   rooms[id]=this;
 }
