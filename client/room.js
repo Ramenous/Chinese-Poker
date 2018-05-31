@@ -96,8 +96,11 @@ function submitHand(hand){
     var result=data.handResult;
     var playerHand=data.playerHand;
     switch(result){
-      case 1:
+      case 0:
         console.log("Not your turn!");
+        break;
+      case 1:
+        console.log("Incorrect amount of cards");
         break;
       case 2:
         console.log("Unauthorized modification to hand, reverting to original hand");
@@ -126,7 +129,7 @@ socket.on("updatePile", function(data){
   loadHand(data, true);
 });
 socket.on("updateTurn", function(data){
-  PLAYER_TURN.innerHTML="It is "++"'s turn";
+  PLAYER_TURN.innerHTML="It is "+data+"'s turn";
 });
 window.onload=function(){
   document.getElementById("submitHand").onclick=function(){

@@ -190,7 +190,7 @@ function validateHand(socket){
     var roomID=data.roomID;
     var room=rooms[roomID];
     var player=players[data.playerSession];
-    var result=1;
+    var result=0;
     if(player.turn==room.playerTurn){
       if(handLength!=4 & handLength<6){
         console.log("Hand is within correct lengths");
@@ -211,6 +211,9 @@ function validateHand(socket){
         }else{
           result=2;
         }
+      }else{
+        result=1
+      }
     }
     console.log("RESULT", result);
     if(result==3){
