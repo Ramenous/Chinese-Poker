@@ -92,6 +92,7 @@ function createRoom(socket){
         var newRoom=new Room(uniqueID, data.roomName, data.roomPass, data.numOfPlayers);
         var master=(players[currSessionID]==null) ? new Player(name,currSessionID, uniqueID) : players[currSessionID];
         master.inRoom=master.isMaster=true;
+        master.turn=newRoom.numOfPlayers();
         newRoom.addPlayer(master);
         newRoom.addRoomEvent([newRoomMsg, joinRoomMsg]);
       }
@@ -114,12 +115,14 @@ function startGame(socket, room){
   var players=room.players;
   var deck=room.createDeck();
   poker.distributeCards(deck, players, room.maxPlayers);
-  room.startedGame=true;
+  room.startGame();
   for(var player in players){
     var socketID=players[player].socketID;
     if(socketID!=null)
       io.to(socketID).emit("distributeHand", players[player].hand);
   }
+  var i=room.playerTurn;
+  io.to(room.id).emit("updateTurn", room.players[i].name);
 }
 
 function joinRoom(socket){
@@ -138,6 +141,7 @@ function joinRoom(socket){
           player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
           player.inRoom=true;
           player.isMaster=false;
+          player.turn=room.numOfPlayers();
           room.addPlayer(player);
           room.addRoomEvent(msg);
           io.to(roomID).emit("updateLog", [msg]);
@@ -183,31 +187,37 @@ function validateHand(socket){
   socket.on("submitHand", function(data, callback){
     var handArray=Object.values(data.playerHand);
     var handLength=handArray.length;
-    var room=rooms[data.roomID];
+    var roomID=data.roomID;
+    var room=rooms[roomID];
     var player=players[data.playerSession];
     var result=1;
-    console.log("hand: ", handArray);
-    if(handLength!=4 & handLength<6){
-      console.log("Hand is within correct lengths");
-      if(verifyHand(handArray, player)){
-        console.log("Hand has not been modified");
-        if(poker.isHigherRanking(handArray, room.getLastHand())){
-          console.log("Is higher ranking, can be added to pile");
-          console.log("Before cards", player.hand.length);
-          var removedCards=player.removeCards(handArray);
-          console.log("After cards", player.hand.length);
-          console.log("REMOVED CARDs",removedCards);
-          room.addToPile(removedCards);
-          result=3;
+    if(player.turn==room.playerTurn){
+      if(handLength!=4 & handLength<6){
+        console.log("Hand is within correct lengths");
+        if(verifyHand(handArray, player)){
+          console.log("Hand has not been modified");
+          if(poker.isHigherRanking(handArray, room.getLastHand())){
+            console.log("Is higher ranking, can be added to pile");
+            console.log("Before cards", player.hand.length);
+            var removedCards=player.removeCards(handArray);
+            console.log("After cards", player.hand.length);
+            console.log("REMOVED CARDs",removedCards);
+            room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn++;
+            room.addToPile(removedCards);
+            result=3;
+          }else{
+            result=4;
+          }
         }else{
-          result=4;
+          result=2;
         }
-      }else{
-        result=2;
-      }
     }
     console.log("RESULT", result);
-    if(result==3)io.to(data.roomID).emit("updatePile", room.getLastHand());
+    if(result==3){
+      io.to(roomID).emit("updatePile", room.getLastHand());
+      var i=room.playerTurn;
+      io.to(roomID).emit("updateTurn", room.players[i].name);
+    }
     callback({handResult: result, playerHand:player.hand});
   });
 }
@@ -275,6 +285,13 @@ Room=function(id, name, pass, maxPlayers){
   this.log=[];
   this.cardPile=[];
   this.startedGame=false;
+  this.numOfPlayers=function(){
+    return this.players.length;
+  }
+  this.startGame=function(){
+    this.startedGame=true;
+    this.playerTurn=Math.floor(Math.random()*this.maxPlayers+1);
+  }
   this.createDeck=function(){
     var deck=poker.initializeDeck(GAME_TYPE[1]);
     poker.shuffleDeck(deck, 5);

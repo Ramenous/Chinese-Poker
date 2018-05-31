@@ -5,7 +5,10 @@ const PLAYER_INFO={playerSession:SESSION, roomID: ROOM};
 const LOG=document.getElementById("roomLog");
 const HAND=document.getElementById("hand");
 const PILE=document.getElementById("pile");
+const PLAYER_TURN=document.getElementById("playerTurn");
+const SUB_HANDS=document.getElementById("subHandContainer");
 var selectedCards={};
+var subHands=[]
 var playerHand=[];
 function assignCardSelection(element,card){
   element.onclick=function(e){
@@ -64,20 +67,37 @@ function resetHand(hand){
   loadHand(hand);
   clearSubHand();
 }
-
+/*
+function addSubHand(){
+  var handAmt=SUB_HANDS.children.length;
+  var subHand=document.createElement("DIV");
+  subHand.id="subHand-"+handAmt;
+  var submitHand=document.createElement("BUTTON");
+  submitHand.onclick=function(){
+    var subHand=subHands[handAmt];
+    if(subHand!=null) submitHand(subHands[handAmt]);
+  }
+  var addToSubHand=document.createElement("BUTTON");
+  addToSubHand.onclick=function(){
+    subHands[handAmt]=selectedCards;
+    console.log("Added these cards ",subHands[handAmt]);
+    selectedCards={};
+  }
+}
+*/
 function submitHand(hand){
   var dataObj={
     playerHand: hand,
     playerSession: SESSION,
     roomID: ROOM
-  }
+  };
   console.log("submitting hand", hand);
   socket.emit("submitHand", dataObj, function(data){
     var result=data.handResult;
     var playerHand=data.playerHand;
     switch(result){
       case 1:
-        console.log("Incorrect hand. Match with current hand pile");
+        console.log("Not your turn!");
         break;
       case 2:
         console.log("Unauthorized modification to hand, reverting to original hand");
@@ -105,8 +125,10 @@ socket.on("updatePile", function(data){
   console.log("updating pile");
   loadHand(data, true);
 });
+socket.on("updateTurn", function(data){
+  PLAYER_TURN.innerHTML="It is "++"'s turn";
+});
 window.onload=function(){
-  var addSubHandButton=document.getElementById("addSubHand");
   document.getElementById("submitHand").onclick=function(){
     submitHand(Object.values(selectedCards));
   }
