@@ -25,6 +25,28 @@ displayFullMsg=function(){
   alert("room is full");
 }
 
+function assignJoinRoom(element, namePrompt,currentName, roomID){
+  element.onclick=function(){
+    console.log("trying to join..");
+    if(name==""){
+      console.log("name null");
+      displayNamePrompt(namePrompt, currentName);
+    }else{
+      console.log("Vat");
+      var dataObj={
+        playerName:name,
+        roomID: roomID
+      };
+      console.log(roomID);
+      console.log(dataObj);
+      socket.emit("joinRoom", dataObj, function(data){
+        console.log("room fullmy dude?",data.roomFull);
+        (!data.roomFull)?window.location.href="/room"+data.room+"/"+name:displayFullMsg();
+      });
+    }
+  }
+}
+
 window.onload=function(){
   var roomPrompt=document.getElementById("room");
   var namePrompt=document.getElementById("name");
@@ -72,19 +94,7 @@ window.onload=function(){
       node.appendChild(roomName);
       var join = document.createElement("BUTTON");
       join.innerHTML="Join Room";
-      join.onclick=function(){
-        if(name==""){
-          displayNamePrompt(namePrompt, currentName);
-        }else{
-          var dataObj={
-            playerName:name,
-            roomID: data[room].id
-          };
-          socket.emit("joinRoom", dataObj, function(data){
-            (!data.roomFull)?window.location.href="/room"+data.room+"/"+name:displayFullMsg();
-          });
-        }
-      }
+      assignJoinRoom(join, namePrompt, currentName, data[room].id);
       node.appendChild(join);
       document.getElementById("roomList").appendChild(node);
     }

@@ -122,6 +122,9 @@ function startGame(socket, room){
       io.to(socketID).emit("distributeHand", players[player].hand);
   }
   var i=room.playerTurn;
+  console.log(room.playerTurn);
+  console.log("players",room.players);
+  console.log("idddd", room.id);
   io.to(room.id).emit("updateTurn", room.players[i].name);
 }
 
@@ -202,7 +205,8 @@ function validateHand(socket){
             var removedCards=player.removeCards(handArray);
             console.log("After cards", player.hand.length);
             console.log("REMOVED CARDs",removedCards);
-            room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn++;
+            console.log("ZE PLAYER TURN", room.playerTurn);
+            room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+=1;
             room.addToPile(removedCards);
             result=3;
           }else{
