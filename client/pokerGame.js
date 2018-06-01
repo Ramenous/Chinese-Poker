@@ -5,6 +5,8 @@ const LOWEST_RANK=2;
 const HIGHEST_RANK=14;
 const CARD_WIDTH=69;
 const CARD_HEIGHT=94;
+const IMG_DIR="/client/img/";
+const IMG_EXT=".png";
 const RANKING={
   "RoyalFlush": function(hand){
     return sameCardAmount(hand, 5, false) && isConsecutive(hand, 10, 15);
@@ -79,9 +81,9 @@ const SHUFFLE_METHOD={
     if(shuffledDeck.length==52){
       return shuffledDeck;
     }else{
-      var consecutivePushes=Math.round(Math.random());
+      var cardAmt=Math.floor(Math.random()*2)+1;
       var cardMarker=(boolSwitch) ? deck.length/2 : 0;
-      shuffledDeck=shuffledDeck.concat(deck.splice(cardMarker, cardMarker+consecutivePushes+1));
+      shuffledDeck=shuffledDeck.concat(deck.splice(cardMarker, cardAmt));
       return rippleShuffle(shuffledDeck, deck, !boolSwitch);
     }
   },
@@ -94,9 +96,9 @@ const SHUFFLE_METHOD={
       return shuffledDeck;
     }else{
       var len=deck.length;
-      var i=Math.floor((Math.random() * 5) + (len * 0.05));
-      var j=Math.floor((Math.random() * 5) + (len * 0.8));
-      var strippedDeck=deck.splice(i,j+1);
+      var start=Math.floor((Math.random() * 5) + (len * 0.05));
+      var amt=Math.floor((Math.random() * 5) + (len * 0.8));
+      var strippedDeck=deck.splice(start,amt);
       shuffledDeck=shuffledDeck.concat(deck);
       return stripShuffle(shuffledDeck, strippedDeck);
     }
@@ -115,7 +117,7 @@ const SHUFFLE_METHOD={
   }
 };
 
-shuffleDeck=function(deck, amount, shuffleMethod){
+function shuffleDeck(deck, amount, shuffleMethod){
   var timesShuffled=(amount==null) ? 1 : amount;
   for(var i=0; i<timesShuffled; i++){
     var method=(shuffleMethod==null) ? Math.floor((Math.random() * 3) + 1) : shuffleMethod;
@@ -125,7 +127,7 @@ shuffleDeck=function(deck, amount, shuffleMethod){
   }
 }
 
-sameCardAmount=function(hand, amount, checkingRank, exact, getCardRank){
+function sameCardAmount(hand, amount, checkingRank, exact, getCardRank){
   var cardCounter={};
   for(var i=0; i<hand.length; i++){
     var key=(checkingRank)?hand[i].rank:hand[i].suit;
@@ -138,7 +140,7 @@ sameCardAmount=function(hand, amount, checkingRank, exact, getCardRank){
   return (getCardRank) ? 0 : false;
 }
 
-isConsecutive=function(hand, start, end){
+function isConsecutive(hand, start, end){
   var sortedHand=hand.slice(0, hand.length);
   sortedHand.sort(function(a, b){return a.rank-b.rank});
   var lowest=(start==null) ? 0 : start;
@@ -151,7 +153,7 @@ isConsecutive=function(hand, start, end){
   return true;
 }
 
-getHighestRank=function(hand){
+function getHighestRank(hand){
   var highest=0;
   for(var card in hand){
     if(hand[card].rank>highest) highest=hand[card].rank;
@@ -159,13 +161,13 @@ getHighestRank=function(hand){
   return highest;
 }
 
-getHierarchyRank=function(ranking){
+function getHierarchyRank(ranking){
   for(var rank in HIERARCHY){
     if(ranking==HIERARCHY[rank])return rank;
   }
 }
 
-findHandRanking=function(hand, ranking){
+function findHandRanking(hand, ranking){
   if(ranking==null) ranking=9;
   if(hand.length==1){
     return hand[0].rank;
@@ -184,12 +186,10 @@ function isHigherRanking(hand1, hand2){
   if(hand2==null) return true;
   var hand1Rank=findHandRanking(hand1);
   var hand2Rank=findHandRanking(hand2);
-  console.log("Hand1 ranking: ",hand1Rank);
-  console.log("Hand2 ranking:", hand2Rank);
   return (hand1Rank==hand2Rank) ?COMPARE_HAND[HIERARCHY[hand1Rank]](hand1,hand2)>1: hand1Rank>hand2Rank;
 }
 
-distributeCards=function(deck, players,numOfPlayers){
+function distributeCards(deck, players,numOfPlayers){
   var cards=deck.cards;
   for(var i=0; i<cards.length; i++){
     players[i%numOfPlayers].addCard(cards[i]);
@@ -203,15 +203,16 @@ Deck = function(){
   }
 }
 
-initializeDeck=function(gameType){
+initializeDeck = function(gameType){
   var deck = new Deck();
   for(var i=LOWEST_RANK; i<=HIGHEST_RANK; i++){
     for(var j=LOWEST_SUIT; j<=HIGHEST_SUIT; j++){
       var card;
-      if(GAME_TYPE[gameType]==1)
+      if(GAME_TYPE[gameType]==1){
         card=(i==HIGHEST_RANK) ? new Card(i,j,LOWEST_RANK) : new Card(i, j, i+1);
-      else
+      }else{
         card=new Card(i,j);
+      }
       deck.add(card);
     }
   }
@@ -225,7 +226,7 @@ Card = function(rank, suit, display){
   this.width=CARD_WIDTH;
   this.height=CARD_HEIGHT;
   this.selected=false;
-  this.src="/client/img/"+this.display+".png";
+  this.src=IMG_DIR+this.display+IMG_EXT;
 }
 
 module.exports={
