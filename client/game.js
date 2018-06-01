@@ -3,9 +3,12 @@ var name, rooms;
 var roomNames=[
   "Let's play!",
   "Poker time!",
+  "Do you have what it takes?",
+  "Game on!",
+  "Bring your pokerface!"
 ];
 
-chooseName=function(msg, namePrompt){
+function chooseName(msg, namePrompt){
   var selectedName=document.getElementById("playerNameInput").value;
   if(selectedName=="") {
     msg.innerHTML="You have not chosen a name";
@@ -15,32 +18,26 @@ chooseName=function(msg, namePrompt){
   }
 }
 
-displayNamePrompt=function(namePrompt, currentName){
+function displayNamePrompt(namePrompt, currentName){
   namePrompt.style.display="initial";
   currentName.value=name;
 }
 
-displayFullMsg=function(){
+function displayFullMsg(){
   //todo: Make this into a prompt with room name and info;
   alert("room is full");
 }
 
 function assignJoinRoom(element, namePrompt,currentName, roomID){
   element.onclick=function(){
-    console.log("trying to join..");
     if(name==""){
-      console.log("name null");
       displayNamePrompt(namePrompt, currentName);
     }else{
-      console.log("Vat");
       var dataObj={
         playerName:name,
         roomID: roomID
       };
-      console.log(roomID);
-      console.log(dataObj);
       socket.emit("joinRoom", dataObj, function(data){
-        console.log("room fullmy dude?",data.roomFull);
         (!data.roomFull)?window.location.href="/room"+data.room+"/"+name:displayFullMsg();
       });
     }
@@ -87,13 +84,15 @@ window.onload=function(){
   document.getElementById("cancelRoom").onclick=function(){
     roomPrompt.style.display="none";
   }
+  document.getElementById("joinRoom").onclick=function(){
+
+  }
   socket.emit("obtainRooms",{},function (data){
     for(var room in data){
       var node = document.createElement("LI");
       var roomName = document.createTextNode(data[room].name);
       node.appendChild(roomName);
       var join = document.createElement("BUTTON");
-      join.innerHTML="Join Room";
       assignJoinRoom(join, namePrompt, currentName, data[room].id);
       node.appendChild(join);
       document.getElementById("roomList").appendChild(node);

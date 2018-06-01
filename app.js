@@ -6,6 +6,8 @@ const serv=require('http').Server(app);
 const socketIO = require('socket.io');
 const session = require('express-session');
 const poker=require('./client/pokerGame.js');
+const ROOM_VIEW="room";
+const HOME_VIEW="home";
 const GAME_TYPE={
   1:"ChinesePoker",
 }
@@ -32,21 +34,23 @@ app.use(session({
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "/client"));
 
-/**
-  Renders the view of a pug file when a GET request is made.
+/*
+  Renders the view of the home page.
+  Loads the lobby if the user is new or not in a game
+  Loads the user's game room if he/she is in a game
 */
-
 app.get("/", function(req, res){
   var currSessionID=req.session.id;
+  var player=players[currSessionID];
   if(sessions[currSessionID]==null){
     sessions[currSessionID]=currSessionID;
     console.log("New User has connected - Session: ", currSessionID);
-    res.render("test");
+    res.render(HOME_VIEW);
   }else{
-    if(players[currSessionID]!=null && players[currSessionID].inRoom){
-      res.render("room", {roomID: players[currSessionID].room, sessionID: currSessionID});
+    if(player!=null && player.inRoom){
+      res.render(ROOM_VIEW, {roomID: player.room, sessionID: currSessionID});
     }else{
-      res.render("test");
+      res.render(HOME_VIEW);
     }
     console.log("User Session ", currSessionID, " has reconnected.");
   }
@@ -71,7 +75,6 @@ function roomEvent(name, roomID, created){
 function validLinkID(){
   var id=Math.floor((Math.random() * 999999) + 111111);
   if(rooms[id]==null){
-    rooms[id]=id;
     return id;
   }
   return validLinkID();
@@ -117,7 +120,7 @@ function routeRoom(name,roomID, roomName, roomPass, numOfPlayers){
   app.get("/room"+roomID+"/"+name, function(req, res){
     var currSessionID=req.session.id;
     var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
-    if(typeof room != "object"){
+    if(room == null){
       room=new Room(uniqueID, roomName, roomPass, numOfPlayers);
       master=true;
       msg.unshift(roomEvent(name, roomID, true));
@@ -133,7 +136,7 @@ function routeRoom(name,roomID, roomName, roomPass, numOfPlayers){
     room.addPlayer(player);
     room.addRoomEvent(msg);
     if(room.getPlayerCount()==room.maxPlayers) startGame(socket, room);
-    res.render("room", {roomID: roomID, sessionID: currSessionID});
+    res.render(ROOM_VIEW, {roomID: roomID, sessionID: currSessionID});
   });
 }
 
@@ -175,36 +178,29 @@ function verifyHand(hand, player){
   }
   return true;
 }
-function validateHand(socket){
+
+function validateHand(submittedHand, room, player){
+  if(player.turn!=room.playerTurn) return 1;
+  if(submittedHand.length==4 || submittedHand.length>5 || submittedHand==null) return 2;
+  if(!verifyHand(submittedHand, player)) return 3;
+  if(!poker.isHigherRanking(submittedHand, room.getLastHand())) return 4;
+  return 0;
+}
+
+function submitHand(socket){
   socket.on("submitHand", function(data, callback){
     var handArray=Object.values(data.playerHand);
-    var handLength=handArray.length;
     var roomID=data.roomID;
     var room=rooms[roomID];
     var player=players[data.playerSession];
-    var result=0;
-    if(player.turn==room.playerTurn){
-      if(handLength!=4 & handLength<6){
-        if(verifyHand(handArray, player)){
-          if(poker.isHigherRanking(handArray, room.getLastHand())){
-            var removedCards=player.removeCards(handArray);
-            room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+=1;
-            room.addToPile(removedCards);
-            result=3;
-          }else{
-            result=4;
-          }
-        }else{
-          result=2;
-        }
-      }else{
-        result=1
-      }
-    }
-    if(result==3){
+    var result=validateHand(handArray, room, player);
+    if(result==0){
+      var removedCards=player.removeCards(handArray);
+      room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+1;
+      room.addToPile(removedCards);
       io.to(roomID).emit("updatePile", room.getLastHand());
-      var i=room.playerTurn;
-      io.to(roomID).emit("updateTurn", room.players[i].name);
+      var turn=room.playerTurn;
+      io.to(roomID).emit("updateTurn", room.players[turn].name);
     }
     callback({handResult: result, playerHand:player.hand});
   });
@@ -221,19 +217,24 @@ function socketDisconnect(socket){
   });
 }
 
-var io = socketIO(serv);
-io.sockets.on("connection",function(socket){
-  console.log("Connected!");
+function obtainRooms(socket){
   socket.on("obtainRooms",function(data,callback){
     callback(rooms);
   });
+}
+
+function socketConnect(socket){
+  console.log("Connected!");
   assignChannel(socket);
   joinRoom(socket);
   createRoom(socket);
   getPlayerHand(socket);
-  validateHand(socket);
-  //socketDisconnect(socket);
-});
+  submitHand(socket);
+  socketDisconnect(socket);
+}
+
+var io = socketIO(serv);
+io.sockets.on("connection", socketConnect);
 
 Player=function(name, sessionID, roomID){
   this.name=name;
@@ -268,7 +269,6 @@ Player=function(name, sessionID, roomID){
   }
   players[sessionID]=this;
 }
-
 
 Room=function(id, name, pass, maxPlayers){
   this.id=id;
