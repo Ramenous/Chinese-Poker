@@ -82,22 +82,7 @@ function createRoom(socket){
     var uniqueID=validLinkID();
     callback(uniqueID);
     var name=data.masterName;
-    var newRoomMsg=roomEvent(name, uniqueID, true);
-    var joinRoomMsg=roomEvent(name, uniqueID, false);
-    app.get("/room"+uniqueID+"/"+name, function(req, res){
-      var currSessionID=req.session.id;
-      if(typeof rooms[uniqueID] != "object"){
-        console.log(newRoomMsg);
-        console.log(joinRoomMsg);
-        var newRoom=new Room(uniqueID, data.roomName, data.roomPass, data.numOfPlayers);
-        var master=(players[currSessionID]==null) ? new Player(name,currSessionID, uniqueID) : players[currSessionID];
-        master.inRoom=master.isMaster=true;
-        master.turn=newRoom.numOfPlayers();
-        newRoom.addPlayer(master);
-        newRoom.addRoomEvent([newRoomMsg, joinRoomMsg]);
-      }
-      res.render("room", {roomID: uniqueID, sessionID: currSessionID});
-    });
+    routeRoom(name, uniqueID, data.roomName, data.roomPass, data.numOfPlayers);
   });
 }
 
@@ -121,41 +106,44 @@ function startGame(socket, room){
     if(socketID!=null)
       io.to(socketID).emit("distributeHand", players[player].hand);
   }
-  var i=room.playerTurn;
-  console.log(room.playerTurn);
-  console.log("players",room.players);
-  console.log("idddd", room.id);
-  io.to(room.id).emit("updateTurn", room.players[i].name);
+  var index=room.playerTurn;
+  io.to(room.id).emit("updateTurn", room.players[index].name);
+}
+
+function routeRoom(name,roomID, roomName, roomPass, numOfPlayers){
+  var room=rooms[roomID];
+  var master=false;
+  var msg=[roomEvent(name, roomID, false)];
+  app.get("/room"+roomID+"/"+name, function(req, res){
+    var currSessionID=req.session.id;
+    var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
+    if(typeof room != "object"){
+      room=new Room(uniqueID, roomName, roomPass, numOfPlayers);
+      master=true;
+      msg.unshift(roomEvent(name, roomID, true));
+    }else{
+      var correctRoom=roomID;
+      if(player.roomID!=roomID) {
+        room=rooms[player.roomID];
+        correctRoom=player.roomID;
+      }
+      io.to(correctRoom).emit("updateLog", [msg]);
+    }
+    player.enterRoom(master,room.numOfPlayers());
+    room.addPlayer(player);
+    room.addRoomEvent(msg);
+    if(room.getPlayerCount()==room.maxPlayers) startGame(socket, room);
+    res.render("room", {roomID: roomID, sessionID: currSessionID});
+  });
 }
 
 function joinRoom(socket){
   socket.on("joinRoom", function(data, callback){
     var roomID=data.roomID;
     var name=data.playerName;
-    var room=rooms[roomID];
     var isFull=false;
     if(room.getPlayerCount()<room.maxPlayers){
-      app.get("/room"+roomID+"/"+name, function(req, res){
-        var currSessionID=req.session.id;
-        var player=players[currSessionID];
-        if(player==null || (player!=null && !player.inRoom)){
-          var msg=roomEvent(name, roomID, false);
-          console.log(msg);
-          player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
-          player.inRoom=true;
-          player.isMaster=false;
-          player.turn=room.numOfPlayers();
-          room.addPlayer(player);
-          room.addRoomEvent(msg);
-          io.to(roomID).emit("updateLog", [msg]);
-          if(room.getPlayerCount()==room.maxPlayers){
-            startGame(socket, room);
-          }
-        }else if(player.roomID!=roomID){
-          //redirect to right room
-        }
-        res.render("room", {roomID: roomID, sessionID: currSessionID});
-      });
+      routeRoom(name, roomID);
     }else{
       isFull=true;
     }
@@ -178,9 +166,10 @@ function verifyHand(hand, player){
   for(var card in hand){
     var containsCard=false;
     for(var realCard in realPlayerHand){
-      console.log("Real: ",realPlayerHand[realCard].display, "submited",hand[card].display);
-      console.log("TRU?",hand[card].display==realPlayerHand[realCard].display);
-      if(hand[card].display==realPlayerHand[realCard].display) containsCard=true;
+      if(hand[card].display==realPlayerHand[realCard].display){
+        containsCard=true;
+        break;
+      }
     }
     if(!containsCard) return false;
   }
@@ -196,16 +185,9 @@ function validateHand(socket){
     var result=0;
     if(player.turn==room.playerTurn){
       if(handLength!=4 & handLength<6){
-        console.log("Hand is within correct lengths");
         if(verifyHand(handArray, player)){
-          console.log("Hand has not been modified");
           if(poker.isHigherRanking(handArray, room.getLastHand())){
-            console.log("Is higher ranking, can be added to pile");
-            console.log("Before cards", player.hand.length);
             var removedCards=player.removeCards(handArray);
-            console.log("After cards", player.hand.length);
-            console.log("REMOVED CARDs",removedCards);
-            console.log("ZE PLAYER TURN", room.playerTurn);
             room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+=1;
             room.addToPile(removedCards);
             result=3;
@@ -219,7 +201,6 @@ function validateHand(socket){
         result=1
       }
     }
-    console.log("RESULT", result);
     if(result==3){
       io.to(roomID).emit("updatePile", room.getLastHand());
       var i=room.playerTurn;
@@ -260,19 +241,25 @@ Player=function(name, sessionID, roomID){
   this.roomID=roomID;
   this.sessionID=sessionID;
   this.hand=[];
+  this.enterRoom=function(isMaster, playerNumber){
+    this.inRoom=true;
+    player.isMaster=isMaster;
+    if(this.turn==null)this.turn=playerNumber;
+  }
+  this.exitRoom=function(){
+    this.inRoom=false;
+    delete player.isMaster;
+    delete player.turn;
+  }
   this.addCard=function(card){
     this.hand.push(card);
   }
   this.removeCards=function(cards){
     var removed=[];
-    //console.log(cards);
     for(var i=0; i<cards.length; i++){
       for(var j=0; j<this.hand.length;j++){
-        //console.log("remiving card:",cards[i].display, "hand card:",this.hand[j].display, "eqla?",cards[i].display==this.hand[j].display);
         if(cards[i].display==this.hand[j].display){
-          console.log("before,",this.hand.length);
           removed=removed.concat(this.hand.splice(j,1));
-          console.log("after", this.hand.length);
           break;
         }
       }
