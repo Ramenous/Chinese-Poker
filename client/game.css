@@ -16,8 +16,8 @@
   height:400px;
 }
 #namePrompt{
-  width:200px;
-  height:100px;
+  width:300px;
+  height:220px;
 }
 .inputContainer{
   display:block;
@@ -31,6 +31,16 @@
   position: absolute;
   width:190px;
   height:200px;
+  margin:auto;
+}
+#nameForm{
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: absolute;
+  width:220px;
+  height:30px;
   margin:auto;
 }
 
@@ -51,7 +61,10 @@
 .msg{
   color:red;
 }
-#roomBanner{
+#playerNameInput{
+  width:220px;
+}
+#roomBanner, #nameBanner{
   width:400px;
   height:75px;
   border-radius: 10px 10px 0px 0px;
@@ -63,10 +76,13 @@
   font-weight: bold;
   color:white;
 }
+#nameBanner{
+  background-color:#42f4bc;
+}
 .promptContainer{
   display:none;
 }
-#createRoom, #cancelRoom{
+#createRoom, #cancelRoom, #selectName, #cancelName{
   height:40px;
   width:91px;
   border-radius: 10px;
@@ -77,14 +93,28 @@
   font-size:17px;
   color:white;
 }
-
-#createRoom:active, #cancelRoom:active{
+#selectName{
+  width:130px;
+}
+#cancelName{
+  width:81px;
+}
+#selectName, #cancelName{
+  background-color: #42f4bc;
+}
+#createRoom:active, #cancelRoom:active, #selectName:active, #cancelName:active{
   background-color: #0bb5c1;
 }
-
+#selectName:active, #cancelName:active{
+  background-color: #0ef1a9;
+}
 #createRoom:hover, #cancelRoom:hover{
   background-color: white;
   color:#0dcbd9;
+}
+#selectName:hover, #cancelName:hover{
+  background-color: white;
+  color:#42f4bc;
 }
 
 input:focus, button:focus {

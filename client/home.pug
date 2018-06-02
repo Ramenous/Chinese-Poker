@@ -3,17 +3,19 @@ html
     script(src="/socket.io/socket.io.js")
     script(src="/client/game.js")
     body
+      div(id="lobby")
         h1 Chinese Poker Online
         p Nothing to see here.
         div(id="name" class="promptContainer")
           div(class="screen")
           div(id="namePrompt" class="prompt")
-            div(class="inputContainer" id="playerName")
-              span(class="inputTitle") Choose your name:
-              input(class="input" name="playerName" id="playerNameInput")
-              span(class="msg" id="nameMsg")
-            button(id="selectName") Select Name
-            button(id="cancelName") Cancel
+            div(id="nameBanner") Choose a Name
+            div(id="nameForm")
+              div(class="inputContainer" id="playerName")
+                input(class="inputs" name="playerName" id="playerNameInput")
+                span(class="msg" id="nameMsg")
+              button(id="selectName") Select Name
+              button(id="cancelName") Cancel
         div(id="room" class="promptContainer")
           div(class="screen")
           div(id="roomPrompt" class="prompt")
