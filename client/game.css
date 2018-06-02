@@ -12,19 +12,85 @@
   font-family:"corbel";
 }
 #roomPrompt{
-  width:300px;
-  height:300px;
+  width:400px;
+  height:400px;
 }
 #namePrompt{
   width:200px;
   height:100px;
 }
+.inputContainer{
+  display:block;
+  margin-bottom: 7px;
+}
+#roomForm{
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: absolute;
+  width:190px;
+  height:200px;
+  margin:auto;
+}
+
+.inputs, #numOfPlayers{
+  width:190px;
+  height:25px;
+  padding-right: 4px;
+  padding-left: 4px;
+  border: 1px solid grey;
+  border-radius: 5px;
+  display:block;
+}
+#numOfPlayers{
+  width:55px;
+  display:inline-block;
+  margin-left: 8px;
+}
 .msg{
   color:red;
+}
+#roomBanner{
+  width:400px;
+  height:75px;
+  border-radius: 10px 10px 0px 0px;
+  background-color:#0ee2f1;
+  text-align: center;
+  vertical-align: middle;
+  display: table-cell;
+  font-size:40px;
+  font-weight: bold;
+  color:white;
 }
 .promptContainer{
   display:none;
 }
+#createRoom, #cancelRoom{
+  height:40px;
+  width:91px;
+  border-radius: 10px;
+  border: 1px solid grey;
+  margin: 2px;
+  background-color:#0ee2f1;
+  font-weight:bold;
+  font-size:17px;
+  color:white;
+}
+
+#createRoom:active, #cancelRoom:active{
+  background-color: #0bb5c1;
+}
+
+#createRoom:hover, #cancelRoom:hover{
+  background-color: white;
+  color:#0dcbd9;
+}
+
+input:focus, button:focus {
+    outline:none;
+}
+
 .screen{
   z-index:1;
   top:0px;
@@ -34,8 +100,4 @@
   height:100%;
   background-color: grey;
   opacity: 0.7;
-}
-.inputs{
-  width:auto;
-  height:auto;
 }

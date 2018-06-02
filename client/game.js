@@ -50,6 +50,7 @@ window.onload=function(){
   var nameMsg=document.getElementById("nameMsg");
   var roomMsg=document.getElementById("roomMsg");
   var currentName=document.getElementById("playerNameInput");
+  var roomNameInput=document.getElementById("roomNameInput");
   document.getElementById("chooseName").onclick=function(){
     displayNamePrompt(namePrompt, currentName);
   }
@@ -61,6 +62,7 @@ window.onload=function(){
       displayNamePrompt(namePrompt, currentName);
     }else{
       roomPrompt.style.display="initial";
+      roomNameInput.value=roomNames[Math.floor(Math.random()*roomNames.length)];
     }
   }
   document.getElementById("cancelName").onclick=function(){
@@ -89,13 +91,13 @@ window.onload=function(){
   }
   socket.emit("obtainRooms",{},function (data){
     for(var room in data){
-      var node = document.createElement("LI");
+      var roomNode = document.createElement("LI");
       var roomName = document.createTextNode(data[room].name);
       node.appendChild(roomName);
-      var join = document.createElement("BUTTON");
-      assignJoinRoom(join, namePrompt, currentName, data[room].id);
-      node.appendChild(join);
-      document.getElementById("roomList").appendChild(node);
+      //var join = document.createElement("BUTTON");
+      //assignJoinRoom(join, namePrompt, currentName, data[room].id);
+      //node.appendChild(join);
+      document.getElementById("roomList").appendChild(roomNode);
     }
   });
 }

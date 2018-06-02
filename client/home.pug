@@ -17,20 +17,22 @@ html
         div(id="room" class="promptContainer")
           div(class="screen")
           div(id="roomPrompt" class="prompt")
-            div(class="inputContainer" id="roomName")
-              span(class="inputTitle") Room Name:
-              input(class="input" name="roomName" id="roomNameInput")
-            div(class="inputContainer" id="roomPass")
-              span(class="inputTitle") Room Pass:
-              input(class="input" name="roomPass" id="roomPassInput")
-            div(class="inputContainer" id="dropdown")
-              span(class="inputTitle") Max Players:
-              select(id="numOfPlayers")
-                option(value="2") 2
-                option(value="3") 3
-                option(value="4") 4
-            button(id="createRoom") Create Room
-            button(id="cancelRoom") Cancel
+            div(id="roomBanner") Create a Room
+            div(id="roomForm")
+              div(class="inputContainer" id="roomName")
+                span Room Name:
+                input(class="inputs" name="roomName" id="roomNameInput")
+              div(class="inputContainer" id="roomPass")
+                span Room Password:
+                input(class="inputs" name="roomPass" id="roomPassInput")
+              div(class="inputContainer" id="dropdown")
+                span Number of Players:
+                select(id="numOfPlayers")
+                  option(value="2") 2
+                  option(value="3") 3
+                  option(value="4") 4
+              button(id="createRoom") Create
+              button(id="cancelRoom") Cancel
         button(id="newRoom") new Room
         button(id="chooseName") choose name
         button(id="joinRoom") Join

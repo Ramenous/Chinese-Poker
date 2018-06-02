@@ -121,7 +121,7 @@ function routeRoom(name,roomID, roomName, roomPass, numOfPlayers){
     var currSessionID=req.session.id;
     var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
     if(room == null){
-      room=new Room(uniqueID, roomName, roomPass, numOfPlayers);
+      room=new Room(roomID, roomName, roomPass, numOfPlayers);
       master=true;
       msg.unshift(roomEvent(name, roomID, true));
     }else{
@@ -244,7 +244,7 @@ Player=function(name, sessionID, roomID){
   this.hand=[];
   this.enterRoom=function(isMaster, playerNumber){
     this.inRoom=true;
-    player.isMaster=isMaster;
+    this.isMaster=isMaster;
     if(this.turn==null)this.turn=playerNumber;
   }
   this.exitRoom=function(){
