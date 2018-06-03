@@ -4,8 +4,23 @@ html
     script(src="/client/game.js")
     body
       div(id="lobby")
-        h1 Chinese Poker Online
-        p Nothing to see here.
+        div(id="lobbyBanner") Chinese Poker Online
+        div(id="roomList")
+          div(class="room" id="roomTitle")
+            img(class="roomIcon" src="/client/img/suit-1.png")
+            span(class="roomInfoTitle" id="roomNumberTitle") Room No.
+            span(class="roomInfoTitle" id="roomNameTitle") Room Name
+            span(class="roomInfoTitle" id="roomPlayersTitle") Players
+          div(class="room")
+            img(class="roomIcon" src="/client/img/suit-1.png")
+            span(class="roomInfo" id="roomNumber") 0001
+            span(class="roomInfo" id="roomName") namedsadasdsadsadadsada
+            span(class="roomInfo" id="roomPlayers") 3/4
+          div(class="room")
+            img(class="roomIcon" src="/client/img/suit-1.png")
+            span(class="roomInfo" id="roomNumber") 0001
+            span(class="roomInfo" id="roomName") namedsadasdsadsadadsada
+            span(class="roomInfo" id="roomPlayers") 3/4
         div(id="name" class="promptContainer")
           div(class="screen")
           div(id="namePrompt" class="prompt")
@@ -38,6 +53,3 @@ html
         button(id="newRoom") new Room
         button(id="chooseName") choose name
         button(id="joinRoom") Join
-        div(id="test") test
-        p Rooms:
-        ul(id="roomList")

@@ -44,6 +44,12 @@ function assignJoinRoom(element, namePrompt,currentName, roomID){
   }
 }
 
+function createRoomElement(roomInfo){
+  var roomName=document.createElement("SPAN");
+  var roomNumber=document.createElement("SPAN");
+  var roomPlayers=document.createElement("SPAN");
+}
+
 window.onload=function(){
   var roomPrompt=document.getElementById("room");
   var namePrompt=document.getElementById("name");

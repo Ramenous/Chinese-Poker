@@ -1,4 +1,4 @@
-.prompt{
+.prompt, #lobby{
   z-index: 2;
   top: 0;
   bottom: 0;
@@ -8,8 +8,12 @@
   position: absolute;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   border-radius: 10px;
-  background-color: white;
   font-family:"corbel";
+  background-color: white;
+}
+#lobby{
+  width:600px;
+  height:800px;
 }
 #roomPrompt{
   width:400px;
@@ -23,25 +27,21 @@
   display:block;
   margin-bottom: 7px;
 }
-#roomForm{
+#roomForm, #nameForm{
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
   position: absolute;
-  width:190px;
-  height:200px;
   margin:auto;
 }
+#roomForm{
+  width:190px;
+  height:200px;
+}
 #nameForm{
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  position: absolute;
   width:220px;
   height:30px;
-  margin:auto;
 }
 
 .inputs, #numOfPlayers{
@@ -64,31 +64,38 @@
 #playerNameInput{
   width:220px;
 }
-#roomBanner, #nameBanner{
-  width:400px;
-  height:75px;
+#roomBanner, #nameBanner, #lobbyBanner{
   border-radius: 10px 10px 0px 0px;
-  background-color:#0ee2f1;
   text-align: center;
   vertical-align: middle;
   display: table-cell;
   font-size:40px;
   font-weight: bold;
+  background-color:#008000;
   color:white;
 }
+#lobbyBanner{
+  width:600px;
+  height:80px;
+}
+#roomBanner{
+  width:400px;
+  height:75px;
+}
 #nameBanner{
-  background-color:#42f4bc;
+  width:400px;
+  height:70px;
 }
 .promptContainer{
   display:none;
 }
-#createRoom, #cancelRoom, #selectName, #cancelName{
+#createRoom, #cancelRoom, #selectName, #cancelName,#newRoom, #chooseName, #joinRoom{
   height:40px;
   width:91px;
   border-radius: 10px;
   border: 1px solid grey;
   margin: 2px;
-  background-color:#0ee2f1;
+  background-color:#008000;
   font-weight:bold;
   font-size:17px;
   color:white;
@@ -99,22 +106,49 @@
 #cancelName{
   width:81px;
 }
-#selectName, #cancelName{
-  background-color: #42f4bc;
-}
 #createRoom:active, #cancelRoom:active, #selectName:active, #cancelName:active{
-  background-color: #0bb5c1;
+  background-color: #003300;
 }
-#selectName:active, #cancelName:active{
-  background-color: #0ef1a9;
-}
-#createRoom:hover, #cancelRoom:hover{
+#createRoom:hover, #cancelRoom:hover,#selectName:hover, #cancelName:hover{
   background-color: white;
-  color:#0dcbd9;
+  color:#008000;
 }
-#selectName:hover, #cancelName:hover{
-  background-color: white;
-  color:#42f4bc;
+.room{
+  font-family:arial;
+  font-size:20px;
+  width:598px;
+  height:auto;
+  display: block;
+  vertical-align:middle;
+  border: 1px solid black;
+  border-top:0;
+}
+.roomInfo{
+  position:relative;
+  border-top:none;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+#roomNameTitle, #roomNumberTitle{
+  margin-left:30px;
+}
+#roomPlayersTitle{
+  margin-left: 210px;
+}
+#roomNumber{
+  margin-left:50px;
+}
+#roomName{
+  margin-left: 52px;
+}
+#roomPlayers{
+  position: absolute;
+  left: 500px;
+}
+#newRoom, #chooseName, #joinRoom{
+  margin:5px;
+  position: absolute;
+  bottom:0;
 }
 
 input:focus, button:focus {
