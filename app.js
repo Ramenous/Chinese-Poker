@@ -135,7 +135,7 @@ function routeRoom(name,roomID, roomName, roomPass, numOfPlayers){
     player.enterRoom(master,room.numOfPlayers());
     room.addPlayer(player);
     room.addRoomEvent(msg);
-    if(room.getPlayerCount()==room.maxPlayers) startGame(socket, room);
+    if(room.numOfPlayers()==room.maxPlayers) startGame(socket, room);
     res.render(ROOM_VIEW, {roomID: roomID, sessionID: currSessionID});
   });
 }
@@ -145,7 +145,7 @@ function joinRoom(socket){
     var roomID=data.roomID;
     var name=data.playerName;
     var isFull=false;
-    if(room.getPlayerCount()<room.maxPlayers){
+    if(room.numOfPlayers()<room.maxPlayers){
       routeRoom(name, roomID);
     }else{
       isFull=true;
@@ -225,12 +225,13 @@ function obtainRooms(socket){
 
 function socketConnect(socket){
   console.log("Connected!");
+  obtainRooms(socket);
   assignChannel(socket);
   joinRoom(socket);
   createRoom(socket);
   getPlayerHand(socket);
   submitHand(socket);
-  socketDisconnect(socket);
+  //socketDisconnect(socket);
 }
 
 var io = socketIO(serv);
@@ -290,9 +291,6 @@ Room=function(id, name, pass, maxPlayers){
     var deck=poker.initializeDeck(GAME_TYPE[1]);
     poker.shuffleDeck(deck, 5);
     return deck;
-  }
-  this.getPlayerCount=function(){
-    return this.players.length;
   }
   this.addRoomEvent=function(event){
     this.lastLogMsgIndex=this.log.length;

@@ -45,9 +45,29 @@ function assignJoinRoom(element, namePrompt,currentName, roomID){
 }
 
 function createRoomElement(roomInfo){
+  console.log("data:",roomInfo);
   var roomName=document.createElement("SPAN");
   var roomNumber=document.createElement("SPAN");
   var roomPlayers=document.createElement("SPAN");
+  var roomIcon=new Image();
+  roomName.className="roomInfo";
+  roomName.id="roomNameInfo";
+  roomNumber.className="roomInfo";
+  roomNumber.id="roomNumberInfo";
+  roomPlayers.className="roomInfo";
+  roomPlayers.id="roomPlayersInfo";
+  roomIcon.className="roomIcon";
+  roomIcon.src="/client/img/suit-"+(Math.floor(Math.random()*4)+1)+".png";
+  roomName.innerHTML=roomInfo.name;
+  roomNumber.innerHTML=roomInfo.id;
+  roomPlayers.innerHTML=roomInfo.players.length+"/"+roomInfo.maxPlayers;
+  var room=document.createElement("DIV");
+  room.className="room";
+  room.appendChild(roomIcon);
+  room.appendChild(roomNumber);
+  room.appendChild(roomName);
+  room.appendChild(roomPlayers);
+  document.getElementById("roomList").appendChild(room);
 }
 
 window.onload=function(){
@@ -95,15 +115,12 @@ window.onload=function(){
   document.getElementById("joinRoom").onclick=function(){
 
   }
+  console.log("helloi");
   socket.emit("obtainRooms",{},function (data){
+    console.log("emittance");
     for(var room in data){
-      var roomNode = document.createElement("LI");
-      var roomName = document.createTextNode(data[room].name);
-      node.appendChild(roomName);
-      //var join = document.createElement("BUTTON");
-      //assignJoinRoom(join, namePrompt, currentName, data[room].id);
-      //node.appendChild(join);
-      document.getElementById("roomList").appendChild(roomNode);
+      console.log("obtaining");
+      createRoomElement(data[room]);
     }
   });
 }

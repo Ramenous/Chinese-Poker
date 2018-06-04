@@ -7,20 +7,10 @@ html
         div(id="lobbyBanner") Chinese Poker Online
         div(id="roomList")
           div(class="room" id="roomTitle")
-            img(class="roomIcon" src="/client/img/suit-1.png")
             span(class="roomInfoTitle" id="roomNumberTitle") Room No.
             span(class="roomInfoTitle" id="roomNameTitle") Room Name
             span(class="roomInfoTitle" id="roomPlayersTitle") Players
-          div(class="room")
-            img(class="roomIcon" src="/client/img/suit-1.png")
-            span(class="roomInfo" id="roomNumber") 0001
-            span(class="roomInfo" id="roomName") namedsadasdsadsadadsada
-            span(class="roomInfo" id="roomPlayers") 3/4
-          div(class="room")
-            img(class="roomIcon" src="/client/img/suit-1.png")
-            span(class="roomInfo" id="roomNumber") 0001
-            span(class="roomInfo" id="roomName") namedsadasdsadsadadsada
-            span(class="roomInfo" id="roomPlayers") 3/4
+        
         div(id="name" class="promptContainer")
           div(class="screen")
           div(id="namePrompt" class="prompt")
@@ -50,6 +40,7 @@ html
                   option(value="4") 4
               button(id="createRoom") Create
               button(id="cancelRoom") Cancel
-        button(id="newRoom") new Room
-        button(id="chooseName") choose name
-        button(id="joinRoom") Join
+        div(id="roomButtons")
+          button(id="newRoom") Create
+          button(id="chooseName") Choose Name
+          button(id="joinRoom") Join

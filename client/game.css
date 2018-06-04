@@ -135,22 +135,26 @@
 #roomPlayersTitle{
   margin-left: 210px;
 }
-#roomNumber{
+#roomNumberInfo{
   margin-left:50px;
 }
-#roomName{
+#roomNameInfo{
   margin-left: 52px;
 }
-#roomPlayers{
+#roomPlayersInfo{
   position: absolute;
   left: 500px;
 }
-#newRoom, #chooseName, #joinRoom{
-  margin:5px;
-  position: absolute;
+#roomButtons{
+  width:350px;
+  display:inline-block;
+  position:absolute;
   bottom:0;
+  border:1px solid black;
 }
-
+#chooseName{
+  width:150px;
+}
 input:focus, button:focus {
     outline:none;
 }
