@@ -68,8 +68,13 @@ serv.listen(5000, function(){
   console.log("Server has started on port 5000");
 });
 
-function roomEvent(name, roomID, created){
-  return (created) ? name+" has created room "+roomID: name+" has joined room "+roomID;
+function roomEvent(name, roomID, status){
+  switch(status){
+    case 0:
+      return name+" has created room "+roomID;
+    case 1:
+      return name+" has joined room "+roomID;
+  }
 }
 
 function validLinkID(){
@@ -116,25 +121,28 @@ function startGame(socket, room){
 function routeRoom(name,roomID, roomName, roomPass, numOfPlayers){
   var room=rooms[roomID];
   var master=false;
-  var msg=[roomEvent(name, roomID, false)];
+  var msg=[roomEvent(name, roomID, 1)];
   app.get("/room"+roomID+"/"+name, function(req, res){
     var currSessionID=req.session.id;
     var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
-    if(room == null){
-      room=new Room(roomID, roomName, roomPass, numOfPlayers);
-      master=true;
-      msg.unshift(roomEvent(name, roomID, true));
+    if(!player.inRoom || room==null){
+      if(room==null){
+        room=new Room(roomID, roomName, roomPass, numOfPlayers);
+        master=true;
+        msg.unshift(roomEvent(name, roomID,0));
+      }else{
+        io.to(roomID).emit("updateLog", msg);
+      }
+      player.enterRoom(master,room.numOfPlayers());
+      room.addPlayer(player);
+      room.addRoomEvent(msg);
     }else{
       var correctRoom=roomID;
       if(player.roomID!=roomID) {
         room=rooms[player.roomID];
         correctRoom=player.roomID;
       }
-      io.to(correctRoom).emit("updateLog", [msg]);
     }
-    player.enterRoom(master,room.numOfPlayers());
-    room.addPlayer(player);
-    room.addRoomEvent(msg);
     if(room.numOfPlayers()==room.maxPlayers) startGame(socket, room);
     res.render(ROOM_VIEW, {roomID: roomID, sessionID: currSessionID});
   });
