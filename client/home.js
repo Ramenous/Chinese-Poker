@@ -7,7 +7,7 @@ var roomNames=[
   "Game on!",
   "Bring your pokerface!"
 ];
-
+var selectedRoom;
 function chooseName(msg, namePrompt){
   var selectedName=document.getElementById("playerNameInput").value;
   if(selectedName=="") {
@@ -45,25 +45,30 @@ function assignJoinRoom(element, namePrompt,currentName, roomID){
 }
 
 function createRoomElement(roomInfo){
-  console.log("data:",roomInfo);
-  var roomName=document.createElement("SPAN");
-  var roomNumber=document.createElement("SPAN");
-  var roomPlayers=document.createElement("SPAN");
-  var roomIcon=new Image();
+  var roomName=document.createElement("DIV");
+  var roomNumber=document.createElement("DIV");
+  var roomPlayers=document.createElement("DIV");
   roomName.className="roomInfo";
   roomName.id="roomNameInfo";
   roomNumber.className="roomInfo";
   roomNumber.id="roomNumberInfo";
   roomPlayers.className="roomInfo";
   roomPlayers.id="roomPlayersInfo";
-  roomIcon.className="roomIcon";
-  roomIcon.src="/client/img/suit-"+(Math.floor(Math.random()*4)+1)+".png";
   roomName.innerHTML=roomInfo.name;
   roomNumber.innerHTML=roomInfo.id;
   roomPlayers.innerHTML=roomInfo.players.length+"/"+roomInfo.maxPlayers;
   var room=document.createElement("DIV");
   room.className="room";
-  room.appendChild(roomIcon);
+  room.onclick=function(){
+    if(selectedRoom!=null){
+      selectedRoom.style.backgroundColor="#4CAF50";
+      selectedRoom.style.color="white";
+    }
+    selectedRoom=room;
+    console.log(room);
+    room.style.backgroundColor="#4CAF50";
+    room.style.color="white";
+  }
   room.appendChild(roomNumber);
   room.appendChild(roomName);
   room.appendChild(roomPlayers);

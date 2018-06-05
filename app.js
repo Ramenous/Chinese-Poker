@@ -157,6 +157,8 @@ function joinRoom(socket){
 function assignChannel(socket){
   socket.on("assignChannel",function(data){
     var roomID=data.roomID;
+    console.log(roomID);
+    console.log("room",rooms[roomID]);
     var player=players[data.playerSession];
     playerSockets[socket.id]=player;
     player.socketID=socket.id;

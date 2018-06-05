@@ -1,20 +1,22 @@
 html
-    link(rel="stylesheet", href="/client/game.css")
+    link(rel="stylesheet", href="/client/home.css")
     script(src="/socket.io/socket.io.js")
-    script(src="/client/game.js")
+    script(src="/client/home.js")
     body
       div(id="lobby")
-        div(id="lobbyBanner") Chinese Poker Online
+        div(id="lobbyBanner")
+          p(class="bannerText") Chinese Poker Online
         div(id="roomList")
           div(class="room" id="roomTitle")
-            span(class="roomInfoTitle" id="roomNumberTitle") Room No.
-            span(class="roomInfoTitle" id="roomNameTitle") Room Name
-            span(class="roomInfoTitle" id="roomPlayersTitle") Players
-        
+            div(class="roomInfoTitle" id="roomNumberTitle") Room No.
+            div(class="roomInfoTitle" id="roomNameTitle") Room Name
+            div(class="roomInfoTitle" id="roomPlayersTitle") Players
+
         div(id="name" class="promptContainer")
           div(class="screen")
           div(id="namePrompt" class="prompt")
-            div(id="nameBanner") Choose a Name
+            div(id="nameBanner")
+              p(class="bannerText") Choose a Name
             div(id="nameForm")
               div(class="inputContainer" id="playerName")
                 input(class="inputs" name="playerName" id="playerNameInput")
@@ -24,7 +26,8 @@ html
         div(id="room" class="promptContainer")
           div(class="screen")
           div(id="roomPrompt" class="prompt")
-            div(id="roomBanner") Create a Room
+            div(id="roomBanner")
+              p(class="bannerText") Create a Room
             div(id="roomForm")
               div(class="inputContainer" id="roomName")
                 span Room Name:
@@ -34,7 +37,7 @@ html
                 input(class="inputs" name="roomPass" id="roomPassInput")
               div(class="inputContainer" id="dropdown")
                 span Number of Players:
-                select(id="numOfPlayers")
+                select(class="inputs" id="numOfPlayers")
                   option(value="2") 2
                   option(value="3") 3
                   option(value="4") 4

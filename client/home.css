@@ -6,9 +6,9 @@
   right: 0;
   margin: auto;
   position: absolute;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   border-radius: 10px;
-  font-family:"corbel";
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  font-family:"Helvetica";
   background-color: white;
 }
 #lobby{
@@ -20,7 +20,7 @@
   height:400px;
 }
 #namePrompt{
-  width:300px;
+  width:350px;
   height:220px;
 }
 .inputContainer{
@@ -44,7 +44,7 @@
   height:30px;
 }
 
-.inputs, #numOfPlayers{
+.inputs{
   width:190px;
   height:25px;
   padding-right: 4px;
@@ -64,38 +64,31 @@
 #playerNameInput{
   width:220px;
 }
+.bannerText{
+  padding:13px;
+  margin:auto;
+}
 #roomBanner, #nameBanner, #lobbyBanner{
   border-radius: 10px 10px 0px 0px;
+  width:inherit;
+  height:auto;
   text-align: center;
+  display: inline-block;
   vertical-align: middle;
-  display: table-cell;
   font-size:40px;
   font-weight: bold;
-  background-color:#008000;
+  background-color:#4CAF50;
   color:white;
-}
-#lobbyBanner{
-  width:600px;
-  height:80px;
-}
-#roomBanner{
-  width:400px;
-  height:75px;
-}
-#nameBanner{
-  width:400px;
-  height:70px;
 }
 .promptContainer{
   display:none;
 }
-#createRoom, #cancelRoom, #selectName, #cancelName,#newRoom, #chooseName, #joinRoom{
+button{
   height:40px;
   width:91px;
-  border-radius: 10px;
-  border: 1px solid grey;
+  border: 1px solid #4CAF50;
   margin: 2px;
-  background-color:#008000;
+  background-color:#4CAF50;
   font-weight:bold;
   font-size:17px;
   color:white;
@@ -106,51 +99,43 @@
 #cancelName{
   width:81px;
 }
-#createRoom:active, #cancelRoom:active, #selectName:active, #cancelName:active{
-  background-color: #003300;
+button:active{
+  background-color: #4CAF50;
 }
-#createRoom:hover, #cancelRoom:hover,#selectName:hover, #cancelName:hover{
+button:hover{
+  border: 1px solid #4CAF50;
   background-color: white;
-  color:#008000;
+  color:#4CAF50;
 }
 .room{
   font-family:arial;
   font-size:20px;
   width:598px;
-  height:auto;
-  display: block;
-  vertical-align:middle;
+  display: flex;
+  flex-direction: row;
+  text-align: center;
   border: 1px solid black;
   border-top:0;
 }
-.roomInfo{
-  position:relative;
-  border-top:none;
-  margin-left: 5px;
-  margin-right: 5px;
+#roomTitle{
+  border-top: 1px solid black;
 }
-#roomNameTitle, #roomNumberTitle{
-  margin-left:30px;
+#roomNumberTitle, #roomNumberInfo{
+  width:100px;
 }
-#roomPlayersTitle{
-  margin-left: 210px;
+#roomNameTitle, #roomNameInfo{
+  width:300px;
 }
-#roomNumberInfo{
-  margin-left:50px;
-}
-#roomNameInfo{
-  margin-left: 52px;
-}
-#roomPlayersInfo{
-  position: absolute;
-  left: 500px;
+#roomPlayersTitle, #roomPlayersInfo{
+  width:200px;
 }
 #roomButtons{
+  float:right;
   width:350px;
   display:inline-block;
   position:absolute;
+  right:0;
   bottom:0;
-  border:1px solid black;
 }
 #chooseName{
   width:150px;
@@ -158,7 +143,6 @@
 input:focus, button:focus {
     outline:none;
 }
-
 .screen{
   z-index:1;
   top:0px;
