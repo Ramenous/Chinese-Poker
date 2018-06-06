@@ -233,6 +233,18 @@ function obtainRooms(socket){
   });
 }
 
+function getPile(socket){
+  socket.on("getPile", function(data, callback){
+    callback(rooms[data].getLastHand());
+  });
+}
+
+function getCurrentPlayerTurn(socket){
+  socket.on("getTurn", function(data,callback){
+    callback(rooms[data].getPlayerTurn);
+  });
+}
+
 function socketConnect(socket){
   console.log("Connected!");
   obtainRooms(socket);
@@ -301,6 +313,9 @@ Room=function(id, name, pass, maxPlayers){
     var deck=poker.initializeDeck(GAME_TYPE[1]);
     poker.shuffleDeck(deck, 5);
     return deck;
+  }
+  this.getPlayerTurn=function(){
+    return (this.playerTurn==null)? "Game has not started" : this.players[this.playerTurn].name;
   }
   this.addRoomEvent=function(event){
     this.lastLogMsgIndex=this.log.length;

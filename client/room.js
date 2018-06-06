@@ -121,8 +121,12 @@ socket.emit("assignChannel", PLAYER_INFO);
 socket.emit("getPlayerHand", PLAYER_INFO, function(data){
   obtainHand(data);
 });
-//socket emit get PILE
-//socket emit get turn
+socket.emit("getPile", ROOM, function(data){
+  loadHand(data,true);
+});
+socket.emit("getTurn", ROOM, function(data){
+  PLAYER_TURN.innerHTML="Player turn: "+data;
+});
 socket.on("distributeHand", function(data){
   obtainHand(data);
 });
