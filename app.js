@@ -25,6 +25,7 @@ app.use("/client/img", express.static(__dirname+"/client"));
 //app.set("imgs", path.join(__dirname, "/img"));
 app.set('trust proxy', 1); // trust first proxy
 app.use(session({
+  maxAge: 8*60*60*1000,
   secret: 'keyboard cat',
   resave: true,
   rolling: true,
