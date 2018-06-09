@@ -7,6 +7,7 @@ var roomNames=[
   "Game on!",
   "Bring your pokerface!"
 ];
+var selectedRoomID;
 var selectedRoom;
 function chooseName(msg, namePrompt){
   var selectedName=document.getElementById("playerNameInput").value;
@@ -65,7 +66,7 @@ function createRoomElement(roomInfo){
       selectedRoom.style.color="white";
     }
     selectedRoom=room;
-    console.log(room);
+    selectedRoomID=roomInfo.id;
     room.style.backgroundColor="#4CAF50";
     room.style.color="white";
   }
@@ -118,13 +119,22 @@ window.onload=function(){
     roomPrompt.style.display="none";
   }
   document.getElementById("joinRoom").onclick=function(){
+    if(name==null){
 
+    }else if(selectedRoomID==null){
+      //prompt 'you have not selected a room'
+    }else{
+      var dataObj={
+        playerName:name,
+        roomID: selectedRoomID
+      };
+      socket.emit("joinRoom", dataObj, function(data){
+        (!data.roomFull)?window.location.href="/room"+data.room+"/"+name:displayFullMsg();
+      });
+    }
   }
-  console.log("helloi");
   socket.emit("obtainRooms",{},function (data){
-    console.log("emittance");
     for(var room in data){
-      console.log("obtaining");
       createRoomElement(data[room]);
     }
   });

@@ -75,6 +75,8 @@ function roomEvent(name, roomID, status){
       return name+" has created room "+roomID;
     case 1:
       return name+" has joined room "+roomID;
+    case 2:
+      return name+" has reconnected";
   }
 }
 
@@ -91,7 +93,7 @@ function createRoom(socket){
     var uniqueID=validLinkID();
     callback(uniqueID);
     var name=data.masterName;
-    routeRoom(name, uniqueID, data.roomName, data.roomPass, data.numOfPlayers);
+    routeRoom(name, uniqueID,socket, data.roomName, data.roomPass, data.numOfPlayers);
   });
 }
 
@@ -119,7 +121,8 @@ function startGame(socket, room){
   io.to(room.id).emit("updateTurn", room.players[index].name);
 }
 
-function routeRoom(name,roomID, roomName, roomPass, numOfPlayers){
+function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
+  var selectedRoomID=roomID;
   var room=rooms[roomID];
   var master=false;
   var msg=[roomEvent(name, roomID, 1)];
@@ -131,21 +134,22 @@ function routeRoom(name,roomID, roomName, roomPass, numOfPlayers){
         room=new Room(roomID, roomName, roomPass, numOfPlayers);
         master=true;
         msg.unshift(roomEvent(name, roomID,0));
-      }else{
-        io.to(roomID).emit("updateLog", msg);
       }
       player.enterRoom(master,room.numOfPlayers());
       room.addPlayer(player);
       room.addRoomEvent(msg);
     }else{
-      var correctRoom=roomID;
+      var correctRoom=rooms[player.roomID];
       if(player.roomID!=roomID) {
-        room=rooms[player.roomID];
-        correctRoom=player.roomID;
+        room=correctRoom;
+        selectedRoomID=player.roomID;
       }
+      msg=[roomEvent(name, roomID,2)];
+      correctRoom.addRoomEvent(msg);
     }
+    io.to(roomID).emit("updateLog", msg);
     if(room.numOfPlayers()==room.maxPlayers) startGame(socket, room);
-    res.render(ROOM_VIEW, {roomID: roomID, sessionID: currSessionID});
+    res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
   });
 }
 
@@ -153,9 +157,10 @@ function joinRoom(socket){
   socket.on("joinRoom", function(data, callback){
     var roomID=data.roomID;
     var name=data.playerName;
+    var room=rooms[roomID];
     var isFull=false;
     if(room.numOfPlayers()<room.maxPlayers){
-      routeRoom(name, roomID);
+      routeRoom(name, roomID, socket);
     }else{
       isFull=true;
     }
@@ -166,8 +171,6 @@ function joinRoom(socket){
 function assignChannel(socket){
   socket.on("assignChannel",function(data){
     var roomID=data.roomID;
-    console.log(roomID);
-    console.log("room",rooms[roomID]);
     var player=players[data.playerSession];
     playerSockets[socket.id]=player;
     player.socketID=socket.id;
@@ -262,7 +265,7 @@ io.sockets.on("connection", socketConnect);
 
 Player=function(name, sessionID, roomID){
   this.name=name;
-  this.inRoom=true;
+  this.inRoom=false;
   this.roomID=roomID;
   this.sessionID=sessionID;
   this.hand=[];

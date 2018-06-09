@@ -1,13 +1,16 @@
 html
-    body
-        div(id="roomID" hidden) #{roomID}
-        div(id="sessionID" hidden) #{sessionID}
-        h1 howdy uniqueID
-        p hello
-        div(id="roomLog")
-        div(id="hand")
+  link(rel="stylesheet", href="/client/room.css")
+  body
+    div(id="roomID" hidden) #{roomID}
+    div(id="sessionID" hidden) #{sessionID}
+    div(id="roomContainer")
+      div(class="roomContent" id="roomLog")
+      div(class="roomContent" id="table")
         div(id="playerTurn")
+        div(id="playerHands")
         div(id="pile") ze pile
+        div(class="roomContent" id="subHandContainer")
+        div(id="playerHand")
         button(id="submitHand") submit
-    script(src="/socket.io/socket.io.js")
-    script(src="/client/room.js")
+  script(src="/socket.io/socket.io.js")
+  script(src="/client/room.js")

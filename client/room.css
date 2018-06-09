@@ -1,0 +1,37 @@
+#roomContainer{
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  position: absolute;
+}
+.roomContent{
+  display:table-cell;
+}
+#roomLog{
+  width:250px;
+  height:500px;
+  border: 3px solid green;
+}
+#roomContainer{
+  width:800px;
+  height:600px;
+  border:3px solid red;
+}
+#table{
+  width:400px;
+  height:400px;
+  border:1px solid blue;
+}
+#subHandContainer{
+  width:200px;
+  height:200px;
+  border:1px solid black;
+}
+#pile{
+  display:inline-block;
+  width:476px;
+  height:98px;
+  border:1px solid purple;
+}
