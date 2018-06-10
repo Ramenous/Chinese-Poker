@@ -25,12 +25,12 @@ app.use("/client/img", express.static(__dirname+"/client"));
 //app.set("imgs", path.join(__dirname, "/img"));
 app.set('trust proxy', 1); // trust first proxy
 app.use(session({
-  maxAge: 8*60*60*1000,
+  duration: 600000,
   secret: 'keyboard cat',
   resave: true,
   rolling: true,
   saveUninitialized: true,
-  cookie: { maxAge: 60000 }
+  cookie: { maxAge: 600000 }
   }));
 app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "/client"));
@@ -70,14 +70,19 @@ serv.listen(5000, function(){
 });
 
 function roomEvent(name, roomID, status){
+  var msg;
   switch(status){
     case 0:
-      return name+" has created room "+roomID;
+      msg= name+" has created room "+roomID;
+      break;
     case 1:
-      return name+" has joined room "+roomID;
+      msg= name+" has joined room "+roomID;
+      break;
     case 2:
-      return name+" has reconnected";
+      msg= name+" has reconnected";
+      break;
   }
+  return {isRoomEvent: true, logMsg:msg };
 }
 
 function validLinkID(){
@@ -129,13 +134,14 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
   app.get("/room"+roomID+"/"+name, function(req, res){
     var currSessionID=req.session.id;
     var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
+    console.log("STATUSUUUU",!player.inRoom ,player.name, room==null);
     if(!player.inRoom || room==null){
       if(room==null){
         room=new Room(roomID, roomName, roomPass, numOfPlayers);
         master=true;
         msg.unshift(roomEvent(name, roomID,0));
       }
-      player.enterRoom(master,room.numOfPlayers());
+      player.enterRoom(master, room.numOfPlayers());
       room.addPlayer(player);
       room.addRoomEvent(msg);
     }else{
@@ -143,12 +149,16 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       if(player.roomID!=roomID) {
         room=correctRoom;
         selectedRoomID=player.roomID;
+        console.log("wrong room");
       }
+      console.log("player in room and room exists");
       msg=[roomEvent(name, roomID,2)];
       correctRoom.addRoomEvent(msg);
     }
     io.to(roomID).emit("updateLog", msg);
-    if(room.numOfPlayers()==room.maxPlayers) startGame(socket, room);
+    if(room.numOfPlayers()==room.maxPlayers && !room.startedGame)
+      startGame(socket, room);
+    console.log("PLAYER: ", player.name, "IN ROOM: ",player.inRoom, "ROOM real?", room!=null, roomID);
     res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
   });
 }
@@ -245,7 +255,7 @@ function getPile(socket){
 
 function getCurrentPlayerTurn(socket){
   socket.on("getTurn", function(data,callback){
-    callback(rooms[data].getPlayerTurn);
+    callback(rooms[data].getPlayerTurn());
   });
 }
 
@@ -311,7 +321,7 @@ Room=function(id, name, pass, maxPlayers){
   }
   this.startGame=function(){
     this.startedGame=true;
-    this.playerTurn=Math.floor(Math.random()*this.maxPlayers+1);
+    this.playerTurn=Math.floor(Math.random()*this.maxPlayers);
   }
   this.createDeck=function(){
     var deck=poker.initializeDeck(GAME_TYPE[1]);

@@ -8,13 +8,22 @@ const PILE=document.getElementById("pile");
 const PLAYER_TURN=document.getElementById("playerTurn");
 const SUB_HANDS=document.getElementById("subHandContainer");
 var selectedCards={};
+var selectedCardImg={};
 var subHands=[]
 var playerHand=[];
 function assignCardSelection(element,card){
   element.onclick=function(e){
-    console.log("selected card: ", card.display);
     card.selected=!card.selected;
-    (card.selected)?selectedCards[card.display]=card:delete selectedCards[card.display];
+    if(card.selected){
+      selectedCards[card.display]=card;
+      selectedCardImg[card.display]=element;
+      element.style.border="3px solid yellow";
+    }else{
+      delete selectedCards[card.display];
+      var card=selectedCardImg[card.display];
+      card.style.border="none";
+      delete selectedCardImg[card];
+    }
   }
 }
 function obtainHand(hand){
@@ -27,6 +36,7 @@ function loadHand(hand, forPile){
     var card=hand[c];
     cardElement.src=card.src;
     cardElement.id=card.display;
+    cardElement.class="card";
     if(forPile==null){
       assignCardSelection(cardElement,card);
       HAND.appendChild(cardElement);
@@ -144,9 +154,12 @@ window.onload=function(){
 }
 socket.on("updateLog", function(data){
   for(var roomEvent in data){
+    var logData=data[roomEvent];
+    console.log("data", data);
     var span = document.createElement("SPAN");
     var lineBreak = document.createElement("BR");
-    var t = document.createTextNode(data[roomEvent]);
+    if(logData.isRoomEvent) span.className="roomEvents";
+    var t = document.createTextNode(logData.logMsg);
     span.appendChild(t);
     span.appendChild(lineBreak);
     LOG.appendChild(span);

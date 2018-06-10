@@ -4,13 +4,16 @@ html
     div(id="roomID" hidden) #{roomID}
     div(id="sessionID" hidden) #{sessionID}
     div(id="roomContainer")
-      div(class="roomContent" id="roomLog")
-      div(class="roomContent" id="table")
-        div(id="playerTurn")
-        div(id="playerHands")
-        div(id="pile") ze pile
-        div(class="roomContent" id="subHandContainer")
+      div(class="roomContent" id="matchContainer")
+        div(class="matchContent" id="table")
+          div(id="playerTurn")
+          div(id="playerHands")
+          div(id="pile") ze pile
+          div(class="matchContent" id="subHandContainer")
         div(id="playerHand")
         button(id="submitHand") submit
+      div(class="roomContent" id="roomComm")
+        div(id="roomLog")
+        div(id="playerInput") ddd
   script(src="/socket.io/socket.io.js")
   script(src="/client/room.js")

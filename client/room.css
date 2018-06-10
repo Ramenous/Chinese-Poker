@@ -1,37 +1,54 @@
-#roomContainer{
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: auto;
-  position: absolute;
-}
-.roomContent{
+
+.matchContent{
   display:table-cell;
 }
-#roomLog{
-  width:250px;
+#roomComm{
+  width:20%;
   height:500px;
   border: 3px solid green;
 }
-#roomContainer{
-  width:800px;
-  height:600px;
+#matchContainer{
+  width:600px;
   border:3px solid red;
+}
+#playerhand{
+  background-color:#4CAF50;
+  border:3px solid brown;
+  padding: 5px;
+}
+.card{
+  margin: 3px;
 }
 #table{
   width:400px;
   height:400px;
   border:1px solid blue;
 }
+.roomEvents{
+  font-size: 12px;
+  color: grey;
+}
 #subHandContainer{
   width:200px;
   height:200px;
   border:1px solid black;
 }
+#roomContainer{
+  display:flex;
+}
+#playerHands{
+  width:300px;
+  height:100px;
+  border:1px solid orange;
+}
 #pile{
   display:inline-block;
   width:476px;
   height:98px;
-  border:1px solid purple;
+  border:3px solid purple;
+}
+#playerInput{
+  position:absolute;
+  bottom:0;
+  border: 3px solid yellow;
 }

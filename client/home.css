@@ -15,7 +15,9 @@
   width:600px;
   height:600px;
 }
-
+#roomComm{
+  display:inline;
+}
 #roomPrompt{
   width:400px;
   height:400px;
@@ -151,7 +153,7 @@ button:hover{
   border-radius: 0px 0px 10px 0px;
 }
 input:focus, button:focus {
-    outline:none;
+  outline:none;
 }
 .screen{
   z-index:1;
