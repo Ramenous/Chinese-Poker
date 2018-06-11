@@ -136,6 +136,7 @@ socket.emit("getPile", ROOM, function(data){
   loadHand(data,true);
 });
 socket.emit("getTurn", ROOM, function(data){
+  console.log(data);
   PLAYER_TURN.innerHTML="Player turn: "+data;
 });
 socket.on("distributeHand", function(data){
@@ -146,7 +147,7 @@ socket.on("updatePile", function(data){
   loadHand(data, true);
 });
 socket.on("updateTurn", function(data){
-  PLAYER_TURN.innerHTML="It is "+data+"'s turn";
+  PLAYER_TURN.innerHTML="Player Turn: "+data;
 });
 window.onload=function(){
   document.getElementById("submitHand").onclick=function(){
