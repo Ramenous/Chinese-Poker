@@ -39,14 +39,10 @@ function loadHand(hand, forPile){
     cardElement.src=card.src;
     cardElement.id=card.display;
     cardElement.className="card";
-    //cardContainer.className="cardContainer";
-    //cardContainer.appendChild(cardElement);
     if(forPile==null){
-      console.log("The card", card);
       assignCardSelection(cardElement,card);
       HAND.appendChild(cardElement);
     }else{
-      console.log("Appending child:",hand);
       PILE.appendChild(cardElement);
     }
   }

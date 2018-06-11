@@ -6,12 +6,23 @@ html
     div(id="roomContainer")
       div(class="roomContent" id="matchContainer")
         div(class="matchContent" id="table")
-          div(id="playerTurn")
           div(id="playerHands")
-          div(id="pile") ze pile
-          div(class="matchContent" id="subHandContainer")
-        div(id="playerHand")
-        button(id="submitHand") submit
+            div(id="turnBanner")
+              div(class="bannerText" id="playerTurn") s s
+            div(id="player1")
+              div(id="name") name
+              div(class="playerInfo" id="cardsLeft") cards remaining: 4
+            div(id="player2")
+              div(id="name") name
+              div(class="playerInfo" id="cardsLeft") cards remaining: 4
+          div(id="pile")
+            img(class="pileCard" src="/client/img/back.png")
+            img(class="pileCard" src="/client/img/back.png")
+            img(class="pileCard" src="/client/img/back.png")
+            img(class="pileCard" src="/client/img/back.png")
+            img(class="pileCard" src="/client/img/back.png")
+          div(id="playerHand")
+          button(id="submitHand") submit
       div(class="roomContent" id="roomComm")
         div(id="roomLog")
         div(id="playerInput") ddd
