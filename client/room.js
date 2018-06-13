@@ -11,8 +11,9 @@ var selectedCards={};
 var selectedCardImg={};
 var subHands=[]
 var playerHand=[];
-function assignCardSelection(element,assignedCard){
+function assignCardFunction(element,assignedCard){
   var card=assignedCard;
+  var cardDisplay=document.getElementById("cardDisplay");
   element.onclick=function(){
     card.selected=!card.selected;
     if(card.selected){
@@ -26,21 +27,33 @@ function assignCardSelection(element,assignedCard){
       delete selectedCardImg[selectedCard.display];
     }
   }
+  element.onmouseover=function(){
+    var src=element.src;
+    cardDisplay.style.display="initial";
+    cardDisplay.src=src;
+  }
+  element.onmouseout=function(){
+    cardDisplay.style.display="none";
+    cardDisplay.src="";
+  }
 }
 function obtainHand(hand){
   playerHand=hand;
   loadHand(hand);
 }
 function loadHand(hand, forPile){
+  var leftPos=77;
   for(var c in hand){
     var cardElement=new Image();
     var cardContainer= document.createElement("DIV");
     var card=hand[c];
     cardElement.src=card.src;
     cardElement.id=card.display;
-    cardElement.className="card";
+    cardElement.className="handCard";
+    cardElement.style.left=leftPos+"px";
+    leftPos+=15;
     if(forPile==null){
-      assignCardSelection(cardElement,card);
+      assignCardFunction(cardElement,card);
       HAND.appendChild(cardElement);
     }else{
       PILE.appendChild(cardElement);

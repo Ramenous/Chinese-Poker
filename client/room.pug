@@ -19,12 +19,13 @@ html
               div(id="name") name
               div(class="playerInfo" id="cardsLeft") cards: 4
           div(id="pile")
-            img(class="pileCard" src="/client/img/back.png")
-            img(class="pileCard" src="/client/img/back.png")
-            img(class="pileCard" src="/client/img/back.png")
-            img(class="pileCard" src="/client/img/back.png")
-            img(class="pileCard" src="/client/img/back.png")
-          div(id="playerHand")
+          div(id="playerHandContainer")
+            div(class="sideBanner" id="handBanner")
+              div(class="handBannerText") Hand
+            div(class="cardContainer")
+              div(id="cardView")
+                img(id="cardDisplay")
+              div(id="playerHand")
           button(id="submitHand") submit
       div(class="roomContent" id="roomComm")
         div(id="roomLog")
