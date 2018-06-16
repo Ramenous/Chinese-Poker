@@ -117,13 +117,15 @@ function startGame(socket, room){
   var deck=room.createDeck();
   poker.distributeCards(deck, players, room.maxPlayers);
   room.startGame();
-  for(var player in players){
-    var socketID=players[player].socketID;
+  for(var p in players){
+    var player=players[p];
+    var socketID=player.socketID;
+    console.log("Distribute",player.name, socketID);
     if(socketID!=null)
-      io.to(socketID).emit("distributeHand", players[player].hand);
+      io.to(socketID).emit("distributeHand", player.hand);
   }
   var index=room.playerTurn;
-  io.to(room.id).emit("updateTurn", room.players[index].name);
+  io.to(room.id).emit("updateTurn", players[index].name);
 }
 
 function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
@@ -156,8 +158,10 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       correctRoom.addRoomEvent(msg);
     }
     io.to(roomID).emit("updateLog", msg);
-    if(room.numOfPlayers()==room.maxPlayers && !room.startedGame)
+    if(room.numOfPlayers()==room.maxPlayers && !room.startedGame){
+      console.log("Starting game");
       startGame(socket, room);
+    }
     console.log("PLAYER: ", player.name, "IN ROOM: ",player.inRoom, "ROOM real?", room!=null, roomID);
     res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
   });
@@ -184,6 +188,7 @@ function assignChannel(socket){
     var player=players[data.playerSession];
     playerSockets[socket.id]=player;
     player.socketID=socket.id;
+    console.log("assigningSocket",player.name, player.socketID);
     socket.join(roomID);
     socket.emit("updateLog", rooms[roomID].log);
   });

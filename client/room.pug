@@ -6,7 +6,7 @@ html
     div(id="roomContainer")
       div(class="roomContent" id="matchContainer")
         div(class="matchContent" id="table")
-          div(id="playerHands")
+          div(id="opponentHands")
             div(id="turnBanner")
               div(class="bannerText" id="playerTurn")
             div(class="players")
@@ -19,13 +19,20 @@ html
               div(id="name") name
               div(class="playerInfo" id="cardsLeft") cards: 4
           div(id="pile")
-          div(id="playerHandContainer")
-            div(class="sideBanner" id="handBanner")
-              div(class="handBannerText") Hand
+          div(id="selectedCardsContainer")
+            div(class="handBanner")
+              div(class="handBannerText") Selected Cards
             div(class="cardContainer")
-              div(id="cardView")
-                img(id="cardDisplay")
-              div(id="playerHand")
+              div(class="cardView")
+                img(class="cardDisplay" id="selectedCardView" src="/client/img/back.png")
+              div(class="cards" id="selectedHand")
+          div(id="playerHandContainer")
+            div(class="handBanner")
+              div(class="handBannerText") Player Hand
+            div(class="cardContainer")
+              div(class="cardView")
+                img(class="cardDisplay" id="mainHandView" src="/client/img/back.png")
+              div(class="cards" id="playerHand")
           button(id="submitHand") submit
       div(class="roomContent" id="roomComm")
         div(id="roomLog")

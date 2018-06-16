@@ -7,34 +7,68 @@ const HAND=document.getElementById("playerHand");
 const PILE=document.getElementById("pile");
 const PLAYER_TURN=document.getElementById("playerTurn");
 const SUB_HANDS=document.getElementById("subHandContainer");
+const SELECTED_HAND=document.getElementById("selectedHand");
+const MAIN_HAND=document.getElementById("playerHand");
+const SELECTED_VIEW=document.getElementById("selectedCardView");
+const MAIN_VIEW=document.getElementById("mainHandView");
+//Hand Display Start Position
+const HDSP=77;
+const SPACING=15;
 var selectedCards={};
 var selectedCardImg={};
 var subHands=[]
 var playerHand=[];
-function assignCardFunction(element,assignedCard){
+function isSelected(card){
+  return card.selected;
+}
+function extractLeftValue(element){
+  return parseInt(element.style.left.split("px")[0]);
+}
+function shiftHand(hand, currPos){
+  for(var i=(currPos==HDSP)?0:(currPos-HDSP)/15; i<hand.length; i++){
+    var card=hand[i];
+    card.style.left=extractLeftValue(card)-SPACING+"px";
+  }
+}
+function assignCardView(card,element, isMouseOver){
+  var view=(isSelected(card))?SELECTED_VIEW:MAIN_VIEW;
+  var src=element.src;
+  if(isMouseOver){
+    view.style.display="initial";
+    view.src=src;
+  }else{
+    view.style.display="none";
+    view.src="";
+  }
+}
+function assignCardFunction(element,assignedCard, currPos){
   var card=assignedCard;
-  var cardDisplay=document.getElementById("cardDisplay");
   element.onclick=function(){
     card.selected=!card.selected;
-    if(card.selected){
+    var elLeft=extractLeftValue(element);
+    if(isSelected(card)){
       selectedCards[card.display]=card;
       selectedCardImg[card.display]=element;
-      element.style.border="3px solid yellow";
+      element.style.left=(SELECTED_HAND.children.length*SPACING)+HDSP+"px";
+      MAIN_HAND.removeChild(element);
+      SELECTED_HAND.appendChild(element);
+      shiftHand(MAIN_HAND.children,elLeft);
+      MAIN_VIEW.style.display="none";
     }else{
       delete selectedCards[card.display];
-      var selectedCard=selectedCardImg[card.display];
-      selectedCard.style.border="3px solid transparent";
-      delete selectedCardImg[selectedCard.display];
+      delete selectedCardImg[card.display];
+      element.style.left=(MAIN_HAND.children.length*SPACING)+HDSP+"px";
+      SELECTED_HAND.removeChild(element);
+      MAIN_HAND.appendChild(element);
+      SELECTED_VIEW.style.display="none";
+      shiftHand(SELECTED_HAND.children,elLeft);
     }
   }
   element.onmouseover=function(){
-    var src=element.src;
-    cardDisplay.style.display="initial";
-    cardDisplay.src=src;
+    assignCardView(card,element, true);
   }
   element.onmouseout=function(){
-    cardDisplay.style.display="none";
-    cardDisplay.src="";
+    assignCardView(card,element, false);
   }
 }
 function obtainHand(hand){
@@ -42,18 +76,19 @@ function obtainHand(hand){
   loadHand(hand);
 }
 function loadHand(hand, forPile){
-  var leftPos=77;
-  for(var c in hand){
+  var leftPos=HDSP;
+  for(var i=0; i<hand.length; i++){
     var cardElement=new Image();
     var cardContainer= document.createElement("DIV");
-    var card=hand[c];
+    var card=hand[i];
     cardElement.src=card.src;
     cardElement.id=card.display;
     cardElement.className="handCard";
     cardElement.style.left=leftPos+"px";
-    leftPos+=15;
+    leftPos+=SPACING;
     if(forPile==null){
-      assignCardFunction(cardElement,card);
+      assignCardFunction(cardElement,card, i);
+      console.log("adding card");
       HAND.appendChild(cardElement);
     }else{
       PILE.appendChild(cardElement);
@@ -143,6 +178,7 @@ function submitHand(hand){
 
 socket.emit("assignChannel", PLAYER_INFO);
 socket.emit("getPlayerHand", PLAYER_INFO, function(data){
+  console.log("data",data);
   obtainHand(data);
 });
 socket.emit("getPile", ROOM, function(data){
@@ -153,6 +189,7 @@ socket.emit("getTurn", ROOM, function(data){
   PLAYER_TURN.innerHTML="Player turn: "+data;
 });
 socket.on("distributeHand", function(data){
+  console.log("Distributing", data);
   obtainHand(data);
 });
 socket.on("updatePile", function(data){

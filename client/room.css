@@ -15,26 +15,15 @@
   position:absolute;
   border: 1px solid black;
 }
-/*
-.handCard:hover{
-  top:-20px;
-  z-index:2;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-}
-*/
-#cardView{
+.cardView{
   width:73px;
   height:96px;
   border: 3px solid grey;
   background-color: grey;
   border-radius: 3px;
-  top:3px;
+  top:5px;
   margin-left:5px;
   position:absolute;
-}
-#cardDisplay{
-  display:none;
-  border:1px solid black;
 }
 #table{
   font-family:"Helvetica";
@@ -58,16 +47,16 @@
   font-weight: bold;
   color:white;
 }
-#handBanner{
-  vertical-align: middle;
-  display: table-cell;
+.handBanner{
+  width:inherit;
   text-align: center;
-  height:inherit;
-  border-radius: 10px 0px 0px 10px;
+  border-radius: 10px 10px 0px 0px;
   background-color: #4CAF50;
   color:white;
   font-weight: bold;
-  width:20px;
+}
+.handBannerText{
+  padding:5px;
 }
 #subHandContainer{
   width:200px;
@@ -77,26 +66,23 @@
 #roomContainer{
   display:flex;
 }
-#playerHands{
+#opponentHands{
   text-align: center;
   width:inherit;
   height:100px;
   border:1px solid orange;
 }
-#playerhand{
+.cards{
   height:108px;
-  top:6px;
+  top:8px;
   margin-left:20px;
   position: absolute;
 }
 #playerHandContainer{
-  border-radius: 10px 0px 0px 10px;
+  border-radius: 10px 10px 0px 0px;
   border:1px solid black;
-  height:108px;
+  height:140px;
   width:inherit;
-}
-.handBannerText{
-  transform: rotate(-90deg);
 }
 .pileCard{
   padding: 4px;
@@ -113,9 +99,6 @@
   width:inherit;
   height:108px;
   position:relative;
-}
-.sideBanner{
-  display:table-cell;
 }
 .players{
   display:inline-block;
