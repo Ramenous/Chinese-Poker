@@ -11,6 +11,13 @@ const SELECTED_HAND=document.getElementById("selectedHand");
 const MAIN_HAND=document.getElementById("playerHand");
 const SELECTED_VIEW=document.getElementById("selectedCardView");
 const MAIN_VIEW=document.getElementById("mainHandView");
+const MESSAGE=document.getElementById("messageContainer");
+const ERRORS={
+  1:"It is not your turn",
+  2:"Incorrect amount of cards. The valid amount of cards for a valid hand is 1,3,4 & 5",
+  3:"Unauthorized modification to hand, reverting to original hand",
+  4:"Your "
+}
 //Hand Display Start Position
 const HDSP=77;
 const SPACING=15;
@@ -41,7 +48,7 @@ function assignCardView(card,element, isMouseOver){
     view.src="";
   }
 }
-function assignCardFunction(element,assignedCard, currPos){
+function assignCardFunction(element,assignedCard){
   var card=assignedCard;
   element.onclick=function(){
     card.selected=!card.selected;
@@ -77,18 +84,17 @@ function obtainHand(hand){
 }
 function loadHand(hand, forPile){
   var leftPos=HDSP;
-  for(var i=0; i<hand.length; i++){
+  for(var c in hand){
     var cardElement=new Image();
     var cardContainer= document.createElement("DIV");
-    var card=hand[i];
+    var card=hand[c];
     cardElement.src=card.src;
     cardElement.id=card.display;
     cardElement.className="handCard";
     cardElement.style.left=leftPos+"px";
     leftPos+=SPACING;
     if(forPile==null){
-      assignCardFunction(cardElement,card, i);
-      console.log("adding card");
+      assignCardFunction(cardElement,card);
       HAND.appendChild(cardElement);
     }else{
       PILE.appendChild(cardElement);
@@ -101,14 +107,15 @@ function updateHand(hand){
     var cardDisplay=selectedCards[card].display;
     for(var j=0; j<cards.length; j++){
       var selectedCard=cards[j];
-      //console.log("Selected card: ", selectedCard.id, "Hand card: ",cardDisplay, "equal:",selectedCard.id==cardDisplay);
       if(selectedCard.id==cardDisplay) {
-        console.log("Selected card: ", selectedCard.id, "Hand card: ",cardDisplay, "equal:",selectedCard.id==cardDisplay);
         HAND.removeChild(cards[j]);
       }
     }
   }
   selectedCards={};
+}
+function loadPlayers(players){
+  //todo
 }
 function clearHand(){
   var cards=HAND.childNodes;
@@ -126,24 +133,15 @@ function resetHand(hand){
   loadHand(hand);
   clearSubHand();
 }
-/*
-function addSubHand(){
-  var handAmt=SUB_HANDS.children.length;
-  var subHand=document.createElement("DIV");
-  subHand.id="subHand-"+handAmt;
-  var submitHand=document.createElement("BUTTON");
-  submitHand.onclick=function(){
-    var subHand=subHands[handAmt];
-    if(subHand!=null) submitHand(subHands[handAmt]);
-  }
-  var addToSubHand=document.createElement("BUTTON");
-  addToSubHand.onclick=function(){
-    subHands[handAmt]=selectedCards;
-    console.log("Added these cards ",subHands[handAmt]);
-    selectedCards={};
+function displayMsg(message){
+  var messageBlock=document.getElementById("message");
+  var container=document.getElementById("messageContainer");
+  container.style.display="initial";
+  messageBlock.innerHTML=message;
+  document.getElementById("okButton").onclick=function(){
+    container.style.display="none";
   }
 }
-*/
 function submitHand(hand){
   var dataObj={
     playerHand: hand,
@@ -155,22 +153,19 @@ function submitHand(hand){
     var result=data.handResult;
     var playerHand=data.playerHand;
     switch(result){
-      case 0:
-        console.log("Not your turn!");
-        break;
       case 1:
-        console.log("Incorrect amount of cards");
+        displayMsg("It is not your turn!");
         break;
       case 2:
+        displayMsg("Incorrect amount of cards! The valid amount of cards for a hand are");
+        break;
+      case 3:
         console.log("Unauthorized modification to hand, reverting to original hand");
         resetHand(playerHand);
         break;
-      case 3:
-        console.log("Successfully submitted hand");
-        updateHand();
-        break;
       case 4:
-        console.log("Invalid hand");
+        console.log("Your hand is not high enough rank");
+        updateHand();
         break;
     }
   });
@@ -178,22 +173,25 @@ function submitHand(hand){
 
 socket.emit("assignChannel", PLAYER_INFO);
 socket.emit("getPlayerHand", PLAYER_INFO, function(data){
-  console.log("data",data);
+  //console.log("data",data);
   obtainHand(data);
 });
 socket.emit("getPile", ROOM, function(data){
   loadHand(data,true);
 });
+socket.emit("getPlayers", ROOM, function(data){
+  loadPlayers(data);
+});
 socket.emit("getTurn", ROOM, function(data){
-  console.log(data);
+  //console.log(data);
   PLAYER_TURN.innerHTML="Player turn: "+data;
 });
 socket.on("distributeHand", function(data){
-  console.log("Distributing", data);
+  //console.log("Distributing", data);
   obtainHand(data);
 });
 socket.on("updatePile", function(data){
-  console.log("updating pile");
+  //console.log("updating pile");
   loadHand(data, true);
 });
 socket.on("updateTurn", function(data){
@@ -207,7 +205,7 @@ window.onload=function(){
 socket.on("updateLog", function(data){
   for(var roomEvent in data){
     var logData=data[roomEvent];
-    console.log("data", data);
+    //console.log("data", data);
     var span = document.createElement("SPAN");
     var lineBreak = document.createElement("BR");
     if(logData.isRoomEvent) span.className="roomEvents";

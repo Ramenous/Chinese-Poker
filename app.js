@@ -120,7 +120,7 @@ function startGame(socket, room){
   for(var p in players){
     var player=players[p];
     var socketID=player.socketID;
-    console.log("Distribute",player.name, socketID);
+    //console.log("Distribute",player.name, socketID);
     if(socketID!=null)
       io.to(socketID).emit("distributeHand", player.hand);
   }
@@ -136,7 +136,7 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
   app.get("/room"+roomID+"/"+name, function(req, res){
     var currSessionID=req.session.id;
     var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
-    console.log("STATUSUUUU",!player.inRoom ,player.name, room==null);
+    //console.log("STATUSUUUU",!player.inRoom ,player.name, room==null);
     if(!player.inRoom || room==null){
       if(room==null){
         room=new Room(roomID, roomName, roomPass, numOfPlayers);
@@ -151,18 +151,18 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       if(player.roomID!=roomID) {
         room=correctRoom;
         selectedRoomID=player.roomID;
-        console.log("wrong room");
+        //console.log("wrong room");
       }
-      console.log("player in room and room exists");
+      //console.log("player in room and room exists");
       msg=[roomEvent(name, roomID,2)];
       correctRoom.addRoomEvent(msg);
     }
     io.to(roomID).emit("updateLog", msg);
     if(room.numOfPlayers()==room.maxPlayers && !room.startedGame){
-      console.log("Starting game");
+      //console.log("Starting game");
       startGame(socket, room);
     }
-    console.log("PLAYER: ", player.name, "IN ROOM: ",player.inRoom, "ROOM real?", room!=null, roomID);
+    //console.log("PLAYER: ", player.name, "IN ROOM: ",player.inRoom, "ROOM real?", room!=null, roomID);
     res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
   });
 }
@@ -188,7 +188,7 @@ function assignChannel(socket){
     var player=players[data.playerSession];
     playerSockets[socket.id]=player;
     player.socketID=socket.id;
-    console.log("assigningSocket",player.name, player.socketID);
+    //console.log("assigningSocket",player.name, player.socketID);
     socket.join(roomID);
     socket.emit("updateLog", rooms[roomID].log);
   });
@@ -263,6 +263,11 @@ function getCurrentPlayerTurn(socket){
     callback(rooms[data].getPlayerTurn());
   });
 }
+function getPlayers(socket){
+  socket.on("getPlayers", function(data, callback){
+    callback(rooms[data].players);
+  });
+}
 
 function socketConnect(socket){
   console.log("Connected!");
@@ -272,6 +277,8 @@ function socketConnect(socket){
   createRoom(socket);
   getPlayerHand(socket);
   submitHand(socket);
+  getPile(socket);
+  getCurrentPlayerTurn(socket);
   //socketDisconnect(socket);
 }
 

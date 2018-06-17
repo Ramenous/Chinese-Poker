@@ -4,6 +4,12 @@ html
     div(id="roomID" hidden) #{roomID}
     div(id="sessionID" hidden) #{sessionID}
     div(id="roomContainer")
+      div(id="messageContainer")
+        div(class="screen")
+        div(id="messageContent")
+          div(class="banner")
+          div(id="message")
+          button(id="okButton") OK
       div(class="roomContent" id="matchContainer")
         div(class="matchContent" id="table")
           div(id="opponentHands")
@@ -19,14 +25,14 @@ html
               div(id="name") name
               div(class="playerInfo" id="cardsLeft") cards: 4
           div(id="pile")
-          div(id="selectedCardsContainer")
+          div(class="handContainer" id="selectedCardsContainer")
             div(class="handBanner")
               div(class="handBannerText") Selected Cards
             div(class="cardContainer")
               div(class="cardView")
                 img(class="cardDisplay" id="selectedCardView" src="/client/img/back.png")
               div(class="cards" id="selectedHand")
-          div(id="playerHandContainer")
+          div(class="handContainer" id="playerHandContainer")
             div(class="handBanner")
               div(class="handBannerText") Player Hand
             div(class="cardContainer")
