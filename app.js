@@ -225,6 +225,9 @@ function submitHand(socket){
     var result=validateHand(handArray, room, player);
     if(result==0){
       var removedCards=player.removeCards(handArray);
+      if(player.hand.length==0){
+        io.to(roomID).emit("updateWinner", {"name":player.name,"number":room.winners++});
+      }
       room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+1;
       room.addToPile(removedCards);
       io.to(roomID).emit("updatePile", room.getLastHand());
@@ -269,6 +272,24 @@ function getPlayers(socket){
   });
 }
 
+function leaveRoom(socket){
+  socket.on("leaveRoom", function(data, callback){
+    var player=playerSession[data.playerSession];
+    var room=rooms[data.roomID];
+    var master=room.removePlayer(player);
+    player.exitRoom();
+    if(master!=null){
+      callback({"master":master.name, "player":player.name});
+    }
+  });
+}
+
+function getMaster(socket){
+  socket.on("getMaster", function(data, callback){
+    callback(rooms[data].master.name);
+  });
+}
+
 function socketConnect(socket){
   console.log("Connected!");
   obtainRooms(socket);
@@ -278,6 +299,8 @@ function socketConnect(socket){
   getPlayerHand(socket);
   submitHand(socket);
   getPile(socket);
+  leaveRoom(socket);
+  getMaster(socket);
   getCurrentPlayerTurn(socket);
   //socketDisconnect(socket);
 }
@@ -294,11 +317,11 @@ Player=function(name, sessionID, roomID){
   this.enterRoom=function(isMaster, playerNumber){
     this.inRoom=true;
     this.isMaster=isMaster;
-    if(this.turn==null)this.turn=playerNumber;
+    this.turn=playerNumber;
   }
   this.exitRoom=function(){
     this.inRoom=false;
-    delete player.isMaster;
+    player.isMaster=false;;
     delete player.turn;
   }
   this.addCard=function(card){
@@ -327,6 +350,7 @@ Room=function(id, name, pass, maxPlayers){
   this.players=[];
   this.log=[];
   this.cardPile=[];
+  this.winners=0;
   this.startedGame=false;
   this.numOfPlayers=function(){
     return this.players.length;
@@ -342,6 +366,20 @@ Room=function(id, name, pass, maxPlayers){
   }
   this.getPlayerTurn=function(){
     return (this.playerTurn==null)? "Game has not started" : this.players[this.playerTurn].name;
+  }
+  this.removePlayer=function(player){
+    var players=this.players;
+    for(var p in players){
+      if(players[p].name==player.name) players.splice[i];
+    }
+    if(player.isMaster){
+      var newMaster=players[0];
+      newMaster.isMaster=true;
+      return newMaster;
+    }
+  }
+  this.kickPlayer=function(){
+    //stops player from joining same room
   }
   this.addRoomEvent=function(event){
     this.lastLogMsgIndex=this.log.length;
