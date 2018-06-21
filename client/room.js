@@ -174,9 +174,7 @@ function leaveRoom(){
   window.location.href="/";
 }
 function passTurn(){
-  socket.emit("passTurn", PLAYER_INFO, function(data){
-    PLAYER_TURN.innerHTML="Turn: "+data;
-  });
+  socket.emit("passTurn", PLAYER_INFO);
 }
 function submitHand(hand){
   if(hand==null){

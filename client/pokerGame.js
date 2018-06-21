@@ -191,9 +191,14 @@ function isHigherRanking(hand1, hand2){
 
 function distributeCards(deck, players,numOfPlayers){
   var cards=deck.cards;
-  for(var i=0; i<(numOfPlayers==2)?cards.length/2:cards.length; i++){
+  var amount=(numOfPlayers==2)?cards.length/2:cards.length;
+  for(var i=0; i<amount; i++){
     players[i%numOfPlayers].addCard(cards[i]);
   }
+}
+
+function isHighestCard(hand){
+  return hand[0].rank==HIGHEST_RANK && hand[0].suit==HIGHEST_SUIT;
 }
 
 Deck = function(){
@@ -233,5 +238,6 @@ module.exports={
   initializeDeck: initializeDeck,
   shuffleDeck: shuffleDeck,
   distributeCards: distributeCards,
-  isHigherRanking: isHigherRanking
+  isHigherRanking: isHigherRanking,
+  isHighestCard: isHighestCard
 };

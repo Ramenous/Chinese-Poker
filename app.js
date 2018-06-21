@@ -228,7 +228,8 @@ function submitHand(socket){
       if(player.hand.length==0){
         io.to(roomID).emit("updateWinner", {"name":player.name,"number":room.winners++});
       }
-      room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+1;
+      if(!poker.isHighestCard(handArray))
+        room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+1;
       room.addToPile(removedCards);
       io.to(roomID).emit("updatePile", room.getLastHand());
       var turn=room.playerTurn;
@@ -294,7 +295,7 @@ function passTurn(socket){
   socket.on("passTurn", function(data, callback){
     var room=rooms[data.roomID];
     room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+1;
-    callback(room.players[room.playerTurn]);
+    io.to(room.id).emit("updateTurn", room.players[room.playerTurn].name);
   });
 }
 
