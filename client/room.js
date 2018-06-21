@@ -13,6 +13,7 @@ const SELECTED_VIEW=document.getElementById("selectedCardView");
 const MAIN_VIEW=document.getElementById("mainHandView");
 const MESSAGE=document.getElementById("messageContainer");
 const MASTER=document.getElementById("master");
+const PASS_TURN=document.getElementById("passTurn");
 const ERRORS={
   1:"It is not your turn",
   2:"Incorrect amount of cards. The valid amount of cards for a valid hand is 1,3,4 & 5",
@@ -172,6 +173,11 @@ function leaveRoom(){
   });
   window.location.href="/";
 }
+function passTurn(){
+  socket.emit("passTurn", PLAYER_INFO, function(data){
+    PLAYER_TURN.innerHTML="Turn: "+data;
+  });
+}
 function submitHand(hand){
   if(hand==null){
     displayMsg("You have not submitted any cards");
@@ -240,6 +246,9 @@ window.onload=function(){
   }
   document.getElementById("leaveRoom").onclick=function(){
     leaveRoom();
+  }
+  document.getElementById("passTurn").onclick=function(){
+    passTurn();
   }
 }
 socket.on("updateLog", function(data){

@@ -290,6 +290,14 @@ function getMaster(socket){
   });
 }
 
+function passTurn(socket){
+  socket.on("passTurn", function(data, callback){
+    var room=rooms[data.roomID];
+    room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+1;
+    callback(room.players[room.playerTurn]);
+  });
+}
+
 function socketConnect(socket){
   console.log("Connected!");
   obtainRooms(socket);
@@ -302,6 +310,7 @@ function socketConnect(socket){
   leaveRoom(socket);
   getMaster(socket);
   getCurrentPlayerTurn(socket);
+  passTurn(socket);
   //socketDisconnect(socket);
 }
 
@@ -371,6 +380,9 @@ Room=function(id, name, pass, maxPlayers){
     var players=this.players;
     for(var p in players){
       if(players[p].name==player.name) players.splice[i];
+    }
+    if(players.length==0){
+      delete rooms[this.id];
     }
     if(player.isMaster){
       var newMaster=players[0];

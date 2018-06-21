@@ -191,7 +191,7 @@ function isHigherRanking(hand1, hand2){
 
 function distributeCards(deck, players,numOfPlayers){
   var cards=deck.cards;
-  for(var i=0; i<cards.length; i++){
+  for(var i=0; i<(numOfPlayers==2)?cards.length/2:cards.length; i++){
     players[i%numOfPlayers].addCard(cards[i]);
   }
 }
