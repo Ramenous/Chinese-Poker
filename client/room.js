@@ -14,6 +14,7 @@ const MAIN_VIEW=document.getElementById("mainHandView");
 const MESSAGE=document.getElementById("messageContainer");
 const MASTER=document.getElementById("master");
 const PASS_TURN=document.getElementById("passTurn");
+const PLAYER_DATA=document.getElementById("playerData");
 const ERRORS={
   1:"It is not your turn",
   2:"Incorrect amount of cards. The valid amount of cards for a valid hand is 1,3,4 & 5",
@@ -128,7 +129,7 @@ function loadPlayers(players){
     tag.className="players";
     tag.innerHTML="Name: "+player.name+" cards: "+player.hand.length;
     tag.value=player.name;
-    document.getElementById("playerData").appendChild(tag);
+    PLAYER_DATA.appendChild(tag);
   }
 }
 function clearHand(){
@@ -156,16 +157,23 @@ function displayMsg(message){
     container.style.display="none";
   }
 }
+function getPlayerElement(name){
+  var players=PLAYER_DATA.children();
+  for(var p in players){
+    var player=players[p];
+    if (player.value==name)return player;
+  }
+}
 function leaveRoom(){
   socket.emit("leaveRoom", PLAYER_INFO, function(data){
     if(data!=null){
-      var players=document.getElementById("playerData").children();
+      var players=PLAYER_DATA.children();
       for(var p in players){
         var player=players[p];
         if (player.value==data.player){
           players.removeChild(player);
         }
-        if (players[p].value==data.master){
+        if (player.value==data.master){
           MASTER.innerHTML="Master: "+data.playerName;
         }
       }
@@ -175,6 +183,9 @@ function leaveRoom(){
 }
 function passTurn(){
   socket.emit("passTurn", PLAYER_INFO);
+}
+function readyPlayer(){
+  socket.emit("readyPlayer", PLAYER_INFO);
 }
 function submitHand(hand){
   if(hand==null){
@@ -225,7 +236,10 @@ socket.emit("getTurn", ROOM, function(data){
 socket.emit("getMaster", ROOM,function(data){
   MASTER.innerHTML="Master: "+data;
 });
-socket.emit("")
+socket.on("updateReadyStatus", function(data){
+  var playerEl=getPlayerElement(data.player);
+  (data.status)?playerEl.style.border="green":playerEl.style.border="red";
+});
 socket.on("distributeHand", function(data){
   obtainHand(data);
 });
@@ -247,6 +261,9 @@ window.onload=function(){
   }
   document.getElementById("passTurn").onclick=function(){
     passTurn();
+  }
+  document.getElementById("ready").onclick=function(){
+    readyPlayer();
   }
 }
 socket.on("updateLog", function(data){

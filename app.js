@@ -158,10 +158,6 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       correctRoom.addRoomEvent(msg);
     }
     io.to(roomID).emit("updateLog", msg);
-    if(room.numOfPlayers()==room.maxPlayers && !room.startedGame){
-      //console.log("Starting game");
-      startGame(socket, room);
-    }
     //console.log("PLAYER: ", player.name, "IN ROOM: ",player.inRoom, "ROOM real?", room!=null, roomID);
     res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
   });
@@ -275,12 +271,12 @@ function getPlayers(socket){
 
 function leaveRoom(socket){
   socket.on("leaveRoom", function(data, callback){
-    var player=playerSession[data.playerSession];
+    var player=players[data.playerSession];
     var room=rooms[data.roomID];
     var master=room.removePlayer(player);
     player.exitRoom();
     if(master!=null){
-      callback({"master":master.name, "player":player.name});
+      callback({master:master.name, player:player.name});
     }
   });
 }
@@ -299,6 +295,20 @@ function passTurn(socket){
   });
 }
 
+function readyPlayer(socket){
+  socket.on("readyPlayer", function(data, callback){
+    var roomID=data.roomID;
+    var room=rooms[roomID];
+    var player=players[data.playerSession];
+    player.isReady=!player.isReady;
+    (player.isReady)?room.playersReady++:room.playersReady--;
+    if(room.numOfPlayers()==room.maxPlayers && !room.startedGame){
+      startGame(socket, room);
+    }
+    io.to(roomID).emit("updateReadyStatus", {player:player.name, status:player.isReady});
+  });
+}
+
 function socketConnect(socket){
   console.log("Connected!");
   obtainRooms(socket);
@@ -312,6 +322,7 @@ function socketConnect(socket){
   getMaster(socket);
   getCurrentPlayerTurn(socket);
   passTurn(socket);
+  readyPlayer(socket);
   //socketDisconnect(socket);
 }
 
@@ -321,6 +332,7 @@ io.sockets.on("connection", socketConnect);
 Player=function(name, sessionID, roomID){
   this.name=name;
   this.inRoom=false;
+  this.isReady=false;
   this.roomID=roomID;
   this.sessionID=sessionID;
   this.hand=[];
@@ -361,6 +373,7 @@ Room=function(id, name, pass, maxPlayers){
   this.log=[];
   this.cardPile=[];
   this.winners=0;
+  this.playersReady=0;
   this.startedGame=false;
   this.numOfPlayers=function(){
     return this.players.length;
