@@ -15,6 +15,7 @@ const MESSAGE=document.getElementById("messageContainer");
 const MASTER=document.getElementById("master");
 const PASS_TURN=document.getElementById("passTurn");
 const PLAYER_DATA=document.getElementById("playerData");
+const READY_BUTTON=document.getElementById("ready");
 const ERRORS={
   1:"It is not your turn",
   2:"Incorrect amount of cards. The valid amount of cards for a valid hand is 1,3,4 & 5",
@@ -161,7 +162,7 @@ function getPlayerElement(name){
   var players=PLAYER_DATA.children();
   for(var p in players){
     var player=players[p];
-    if (player.value==name)return player;
+    if (player.value==name) return player;
   }
 }
 function leaveRoom(){
@@ -238,7 +239,13 @@ socket.emit("getMaster", ROOM,function(data){
 });
 socket.on("updateReadyStatus", function(data){
   var playerEl=getPlayerElement(data.player);
-  (data.status)?playerEl.style.border="green":playerEl.style.border="red";
+  if(data.status){
+    playerEl.style.border="green";
+    READY_BUTTON.innerHTML="Cancel";
+  }else{
+    playerEl.style.border="red";
+    READY_BUTTON.innerHTML="Ready";
+  };
 });
 socket.on("distributeHand", function(data){
   obtainHand(data);
@@ -251,6 +258,12 @@ socket.on("updateTurn", function(data){
 });
 socket.on("updateWinner", function(data){
   addWinner(data);
+});
+socket.on("startGame", function(){
+  READY_BUTTON.disabled=true;
+});
+socket.on("endGame", function(){
+  READY_BUTTON.disabled=false;
 });
 window.onload=function(){
   document.getElementById("submitHand").onclick=function(){

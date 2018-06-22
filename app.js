@@ -114,18 +114,20 @@ function getPlayerHand(socket){
 
 function startGame(socket, room){
   var players=room.players;
+  var roomID=room.id;
   var deck=room.createDeck();
   poker.distributeCards(deck, players, room.maxPlayers);
   room.startGame();
   for(var p in players){
     var player=players[p];
     var socketID=player.socketID;
-    //console.log("Distribute",player.name, socketID);
+    //Using socket ID because each player's hand is unique
     if(socketID!=null)
       io.to(socketID).emit("distributeHand", player.hand);
   }
   var index=room.playerTurn;
-  io.to(room.id).emit("updateTurn", players[index].name);
+  io.to(roomID).emit("updateTurn", {players[index].name});
+  io.to(roomID).emit("startGame");
 }
 
 function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
@@ -212,6 +214,7 @@ function validateHand(submittedHand, room, player){
   return 0;
 }
 
+
 function submitHand(socket){
   socket.on("submitHand", function(data, callback){
     var handArray=Object.values(data.playerHand);
@@ -222,7 +225,19 @@ function submitHand(socket){
     if(result==0){
       var removedCards=player.removeCards(handArray);
       if(player.hand.length==0){
-        io.to(roomID).emit("updateWinner", {"name":player.name,"number":room.winners++});
+        room.winners++;
+        player.winner=true;
+        var endGame=false;
+        if(room.winners==room.maxPlayers-1){
+          room.endGame();
+          endGame=true;
+        }
+        io.to(roomID).emit("updateWinner", {
+          name:player.name,
+          number:room.winners,
+          gameFinished:endGame
+        });
+        io.to(roomID).emit("endGame");
       }
       if(!poker.isHighestCard(handArray))
         room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+1;
@@ -333,6 +348,8 @@ Player=function(name, sessionID, roomID){
   this.name=name;
   this.inRoom=false;
   this.isReady=false;
+  this.isMaster=false;
+  this.winner=false;
   this.roomID=roomID;
   this.sessionID=sessionID;
   this.hand=[];
@@ -343,7 +360,9 @@ Player=function(name, sessionID, roomID){
   }
   this.exitRoom=function(){
     this.inRoom=false;
-    player.isMaster=false;;
+    this.isMaster=false;
+    this.isReady=false;
+    this.winner=false;
     delete player.turn;
   }
   this.addCard=function(card){
@@ -381,6 +400,9 @@ Room=function(id, name, pass, maxPlayers){
   this.startGame=function(){
     this.startedGame=true;
     this.playerTurn=Math.floor(Math.random()*this.maxPlayers);
+  }
+  this.endGame=function(){
+    this.startedGame=false;
   }
   this.createDeck=function(){
     var deck=poker.initializeDeck(GAME_TYPE[1]);
