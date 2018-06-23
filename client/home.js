@@ -118,7 +118,8 @@ window.onload=function(){
   document.getElementById("cancelRoom").onclick=function(){
     roomPrompt.style.display="none";
   }
-  document.getElementById("joinRoom").onclick=function(){
+  var joinRoom=document.getElementById("joinRoom");
+  joinRoom.onclick=function(){
     if(name==null){
 
     }else if(selectedRoomID==null){
@@ -128,6 +129,9 @@ window.onload=function(){
         playerName:name,
         roomID: selectedRoomID
       };
+      joinRoom.disabled=true;
+      alert("text");
+      this.innerHTML="Connecting...";
       socket.emit("joinRoom", dataObj, function(data){
         (!data.roomFull)?window.location.href="/room"+data.room+"/"+name:displayFullMsg();
       });

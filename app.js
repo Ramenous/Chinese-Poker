@@ -126,7 +126,7 @@ function startGame(socket, room){
       io.to(socketID).emit("distributeHand", player.hand);
   }
   var index=room.playerTurn;
-  io.to(roomID).emit("updateTurn", {players[index].name});
+  io.to(roomID).emit("updateTurn", players[index].name);
   io.to(roomID).emit("startGame");
 }
 
@@ -159,6 +159,7 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       msg=[roomEvent(name, roomID,2)];
       correctRoom.addRoomEvent(msg);
     }
+    io.to(roomID).emit("updatePlayers", player);
     io.to(roomID).emit("updateLog", msg);
     //console.log("PLAYER: ", player.name, "IN ROOM: ",player.inRoom, "ROOM real?", room!=null, roomID);
     res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
@@ -311,16 +312,19 @@ function passTurn(socket){
 }
 
 function readyPlayer(socket){
-  socket.on("readyPlayer", function(data, callback){
+  socket.on("readyPlayer", function(data,callback){
     var roomID=data.roomID;
     var room=rooms[roomID];
     var player=players[data.playerSession];
     player.isReady=!player.isReady;
     (player.isReady)?room.playersReady++:room.playersReady--;
-    if(room.numOfPlayers()==room.maxPlayers && !room.startedGame){
+    if(room.playersReady==room.maxPlayers && !room.startedGame){
       startGame(socket, room);
     }
+    //var socketID=player.socketID;
+    //if(socketID!=null)
     io.to(roomID).emit("updateReadyStatus", {player:player.name, status:player.isReady});
+    callback(player.isReady);
   });
 }
 
@@ -335,6 +339,7 @@ function socketConnect(socket){
   getPile(socket);
   leaveRoom(socket);
   getMaster(socket);
+  getPlayers(socket);
   getCurrentPlayerTurn(socket);
   passTurn(socket);
   readyPlayer(socket);

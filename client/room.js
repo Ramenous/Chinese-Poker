@@ -41,6 +41,20 @@ function shiftHand(hand, currPos){
     card.style.left=extractLeftValue(card)-SPACING+"px";
   }
 }
+function getPlayerElement(name){
+  var players=PLAYER_DATA.children;
+  for(var p in players){
+    var player=players[p];
+    if (player.value==name) return player;
+  }
+}
+function getChildById(parent, id){
+  var children=parent.children;
+  for(var c in children){
+    var child=children[c];
+    if(children[c]==id) return child;
+  }
+}
 function assignCardView(card,element, isMouseOver){
   var view=(isSelected(card))?SELECTED_VIEW:MAIN_VIEW;
   var src=element.src;
@@ -87,8 +101,10 @@ function obtainHand(hand){
   loadHand(hand);
 }
 function addWinner(data){
-  var el=document.getElementById("DIV");
-  el.innerHTML="winner#"+data.number+": "+data.name;
+  var winMsg="winner#"+data.number+": "+data.name;
+  var el=document.createElement("DIV");
+  var t=document.createTextNode(winMsg);
+  el.appendChild(t);
   document.getElementById("winners").appendChild(el);
 }
 function loadHand(hand, forPile){
@@ -123,14 +139,23 @@ function updateHand(hand){
   }
   selectedCards={};
 }
+function addPlayer(player){
+  var container=document.createElement("DIV");
+  container.className="players";
+  var t = document.createTextNode("Name: "+player.name+" cards: "+player.hand.length);
+  container.appendChild(t);
+  var status=document.createElement("DIV");
+  status.innerHTML="Not Ready";
+  status.className="status";
+  status.id=player.name+"-status";
+  container.appendChild(status);
+  container.value=player.name;
+  PLAYER_DATA.appendChild(container);
+}
 function loadPlayers(players){
   for(var p in players){
     var player=players[p];
-    var tag=document.createElement("DIV");
-    tag.className="players";
-    tag.innerHTML="Name: "+player.name+" cards: "+player.hand.length;
-    tag.value=player.name;
-    PLAYER_DATA.appendChild(tag);
+    addPlayer(player);
   }
 }
 function clearHand(){
@@ -139,9 +164,6 @@ function clearHand(){
   for(var i=0; i<cards.length; i++){
     HAND.removeChild(cards[i]);
   }
-}
-function clearSubHand(){
-  //functionality
 }
 function resetHand(hand){
   playerHand=hand;
@@ -158,17 +180,10 @@ function displayMsg(message){
     container.style.display="none";
   }
 }
-function getPlayerElement(name){
-  var players=PLAYER_DATA.children();
-  for(var p in players){
-    var player=players[p];
-    if (player.value==name) return player;
-  }
-}
 function leaveRoom(){
   socket.emit("leaveRoom", PLAYER_INFO, function(data){
     if(data!=null){
-      var players=PLAYER_DATA.children();
+      var players=PLAYER_DATA.children;
       for(var p in players){
         var player=players[p];
         if (player.value==data.player){
@@ -186,7 +201,9 @@ function passTurn(){
   socket.emit("passTurn", PLAYER_INFO);
 }
 function readyPlayer(){
-  socket.emit("readyPlayer", PLAYER_INFO);
+  socket.emit("readyPlayer", PLAYER_INFO, function(data){
+    READY_BUTTON.innerHTML=(data)?"Cancel":"Ready";
+  });
 }
 function submitHand(hand){
   if(hand==null){
@@ -238,13 +255,17 @@ socket.emit("getMaster", ROOM,function(data){
   MASTER.innerHTML="Master: "+data;
 });
 socket.on("updateReadyStatus", function(data){
-  var playerEl=getPlayerElement(data.player);
+  var name=data.player;
+  var playerEl=getPlayerElement(name);
+  var statusEl=getChildById(playerEl, name+"-status");
   if(data.status){
     playerEl.style.border="green";
-    READY_BUTTON.innerHTML="Cancel";
+    status.innerHTML="Ready";
+    status.style.color="green";
   }else{
     playerEl.style.border="red";
-    READY_BUTTON.innerHTML="Ready";
+    status.innerHTML="Not Ready";
+    status.style.color="red";
   };
 });
 socket.on("distributeHand", function(data){
@@ -264,6 +285,9 @@ socket.on("startGame", function(){
 });
 socket.on("endGame", function(){
   READY_BUTTON.disabled=false;
+});
+socket.on("updatePlayers", function(data){
+  addPlayer(player);
 });
 window.onload=function(){
   document.getElementById("submitHand").onclick=function(){
