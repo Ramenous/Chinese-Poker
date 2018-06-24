@@ -251,11 +251,12 @@ function submitHand(socket){
       if(!poker.isHighestCard(handArray)){
         room.playerTurn=(room.maxPlayers-1==room.playerTurn)?0:room.playerTurn+1;
         room.lastPlayerTurn=room.playerTurn;
+        room.lastHand=handArray;
+      }else{
+        room.lastHand=null;
       }
-      room.lastHand=handArray;
       io.to(roomID).emit("updatePile", room.lastHand);
       var turn=room.playerTurn;
-      console.log("turn", turn);
       io.to(roomID).emit("updateTurn", room.players[turn].name);
     }
     callback({handResult: result, playerHand:player.hand});
@@ -319,9 +320,10 @@ function passTurn(socket){
     var room=rooms[data.roomID];
     var player=players[data.playerSession];
     room.playersPassed++;
-    if(room.maxPlayers-1==player.playersPassed){
+    if((room.maxPlayers-1)==room.playersPassed){
       room.playerTurn=room.lastPlayerTurn;
       room.lastHand=null;
+      room.playersPassed=0;
     }else{
       room.playerTurn=(room.maxPlayers-1==room.playerTurn)?0:room.playerTurn+1;
     }
@@ -435,7 +437,7 @@ Room=function(id, name, pass, maxPlayers){
     this.winners=0;
     this.playersReady=0;
     this.playersPassed=0;
-    this.cardPile=[];
+    this.lastHand=null;
   }
   this.createDeck=function(){
     var deck=poker.initializeDeck(GAME_TYPE[1]);

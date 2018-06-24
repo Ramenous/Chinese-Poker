@@ -189,10 +189,13 @@ function findHandRanking(hand, ranking){
 }
 
 function isHigherRanking(hand1, hand2){
-  if(hand2==null) return true;
+  if(hand2==null) {
+    console.log("card ranks",hand1Rank, hand2Rank);
+    return true;
+  }
   var hand1Rank=findHandRanking(hand1);
   var hand2Rank=findHandRanking(hand2);
-  console.log(hand1rank,":",hand2rank);
+  console.log("card ranks",hand1Rank, hand2Rank);
   return (hand1Rank==hand2Rank) ?COMPARE_HAND[HIERARCHY[1]](hand1,hand2)>0: hand1Rank>hand2Rank;
 }
 
