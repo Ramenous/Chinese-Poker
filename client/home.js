@@ -1,5 +1,6 @@
 var socket = io();
-var name, rooms;
+var name;
+var rooms;
 var roomNames=[
   "Let's play!",
   "Poker time!",
@@ -19,6 +20,12 @@ function chooseName(msg, namePrompt){
   }
 }
 
+function getDefaultName(){
+  socket.emit("getDefaultName",{}, function(data){
+    name=data;
+  });
+}
+getDefaultName();
 function displayNamePrompt(namePrompt, currentName){
   namePrompt.style.display="initial";
   currentName.value=name;
@@ -130,7 +137,6 @@ window.onload=function(){
         roomID: selectedRoomID
       };
       joinRoom.disabled=true;
-      alert("text");
       this.innerHTML="Connecting...";
       socket.emit("joinRoom", dataObj, function(data){
         (!data.roomFull)?window.location.href="/room"+data.room+"/"+name:displayFullMsg();

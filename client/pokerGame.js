@@ -31,6 +31,9 @@ const RANKING={
   },
   "Pair": function(hand){
     return sameCardAmount(hand, 2, true);
+  },
+  "HighCard": function(hand){
+    return hand.length==1;
   }
 };
 const COMPARE_HAND={
@@ -59,6 +62,9 @@ const COMPARE_HAND={
   },
   "Pair": function(hand1, hand2){
     return getHighestRank(hand1) - getHighestRank(hand2);
+  },
+  "HighCard":function(hand1, hand2){
+    return hand1[0].suit-hand2[0].suit;
   }
 };
 const HIERARCHY={
@@ -186,7 +192,8 @@ function isHigherRanking(hand1, hand2){
   if(hand2==null) return true;
   var hand1Rank=findHandRanking(hand1);
   var hand2Rank=findHandRanking(hand2);
-  return (hand1Rank==hand2Rank) ?COMPARE_HAND[HIERARCHY[hand1Rank]](hand1,hand2)>1: hand1Rank>hand2Rank;
+  console.log(hand1rank,":",hand2rank);
+  return (hand1Rank==hand2Rank) ?COMPARE_HAND[HIERARCHY[1]](hand1,hand2)>0: hand1Rank>hand2Rank;
 }
 
 function distributeCards(deck, players,numOfPlayers){

@@ -16,6 +16,10 @@ const MASTER=document.getElementById("master");
 const PASS_TURN=document.getElementById("passTurn");
 const PLAYER_DATA=document.getElementById("playerData");
 const READY_BUTTON=document.getElementById("ready");
+
+const READY_TXT="Ready";
+const CANCEL_TXT="Cancel";
+const NOT_READY_TXT="Not Ready";
 const ERRORS={
   1:"It is not your turn",
   2:"Incorrect amount of cards. The valid amount of cards for a valid hand is 1,3,4 & 5",
@@ -26,7 +30,7 @@ const ERRORS={
 const HDSP=77;
 const SPACING=15;
 var selectedCards={};
-var selectedCardImg={};
+var selectedCardImgs={};
 var subHands=[]
 var playerHand=[];
 function isSelected(card){
@@ -45,14 +49,14 @@ function getPlayerElement(name){
   var players=PLAYER_DATA.children;
   for(var p in players){
     var player=players[p];
-    if (player.value==name) return player;
+    if (player.id==name) return player;
   }
 }
 function getChildById(parent, id){
   var children=parent.children;
   for(var c in children){
     var child=children[c];
-    if(children[c]==id) return child;
+    if(children[c].id==id) return child;
   }
 }
 function assignCardView(card,element, isMouseOver){
@@ -73,7 +77,7 @@ function assignCardFunction(element,assignedCard){
     var elLeft=extractLeftValue(element);
     if(isSelected(card)){
       selectedCards[card.display]=card;
-      selectedCardImg[card.display]=element;
+      selectedCardImgs[card.display]=element;
       element.style.left=(SELECTED_HAND.children.length*SPACING)+HDSP+"px";
       MAIN_HAND.removeChild(element);
       SELECTED_HAND.appendChild(element);
@@ -81,7 +85,7 @@ function assignCardFunction(element,assignedCard){
       MAIN_VIEW.style.display="none";
     }else{
       delete selectedCards[card.display];
-      delete selectedCardImg[card.display];
+      delete selectedCardImgs[card.display];
       element.style.left=(MAIN_HAND.children.length*SPACING)+HDSP+"px";
       SELECTED_HAND.removeChild(element);
       MAIN_HAND.appendChild(element);
@@ -117,6 +121,8 @@ function loadHand(hand, forPile){
     cardElement.id=card.display;
     cardElement.className="handCard";
     cardElement.style.left=leftPos+"px";
+    console.log("hand", hand);
+    console.log("ze Element:",cardElement);
     leftPos+=SPACING;
     if(forPile==null){
       assignCardFunction(cardElement,card);
@@ -141,15 +147,16 @@ function updateHand(hand){
 }
 function addPlayer(player){
   var container=document.createElement("DIV");
+  var name=player.name;
   container.className="players";
-  var t = document.createTextNode("Name: "+player.name+" cards: "+player.hand.length);
+  var t = document.createTextNode("Name: "+name+" cards: "+player.hand.length);
   container.appendChild(t);
   var status=document.createElement("DIV");
   status.innerHTML="Not Ready";
   status.className="status";
-  status.id=player.name+"-status";
+  status.id=name+"-status";
   container.appendChild(status);
-  container.value=player.name;
+  container.id=name;
   PLAYER_DATA.appendChild(container);
 }
 function loadPlayers(players){
@@ -186,10 +193,10 @@ function leaveRoom(){
       var players=PLAYER_DATA.children;
       for(var p in players){
         var player=players[p];
-        if (player.value==data.player){
+        if (player.id==data.player){
           players.removeChild(player);
         }
-        if (player.value==data.master){
+        if (player.id==data.master){
           MASTER.innerHTML="Master: "+data.playerName;
         }
       }
@@ -198,7 +205,9 @@ function leaveRoom(){
   window.location.href="/";
 }
 function passTurn(){
-  socket.emit("passTurn", PLAYER_INFO);
+  socket.emit("passTurn", PLAYER_INFO,function(data){
+    if(data) displayMsg();
+  });
 }
 function readyPlayer(){
   socket.emit("readyPlayer", PLAYER_INFO, function(data){
@@ -214,11 +223,16 @@ function submitHand(hand){
       playerSession: SESSION,
       roomID: ROOM
     };
-    console.log("submitting hand", hand);
     socket.emit("submitHand", dataObj, function(data){
       var result=data.handResult;
       var playerHand=data.playerHand;
       switch(result){
+        case 0:
+          console.log("this is the case");
+          selectedCards={};
+          selectedCardImgs={};
+          SELECTED_HAND.innerHTML="";
+          break;
         case 1:
           displayMsg("It is not your turn!");
           break;
@@ -226,11 +240,11 @@ function submitHand(hand){
           displayMsg("Incorrect amount of cards! The valid amount of cards for a hand are");
           break;
         case 3:
-          console.log("Unauthorized modification to hand, reverting to original hand");
+          displayMsg("Unauthorized modification to hand, reverting to original hand");
           resetHand(playerHand);
           break;
         case 4:
-          console.log("Your hand is not high enough rank");
+          displayMsg("Your hand is not high enough rank");
           updateHand();
           break;
       }
@@ -257,15 +271,16 @@ socket.emit("getMaster", ROOM,function(data){
 socket.on("updateReadyStatus", function(data){
   var name=data.player;
   var playerEl=getPlayerElement(name);
+  console.log(playerEl);
   var statusEl=getChildById(playerEl, name+"-status");
   if(data.status){
-    playerEl.style.border="green";
-    status.innerHTML="Ready";
-    status.style.color="green";
+    playerEl.style.border="2px solid green";
+    statusEl.innerHTML=READY_TXT;
+    statusEl.style.color="green";
   }else{
-    playerEl.style.border="red";
-    status.innerHTML="Not Ready";
-    status.style.color="red";
+    playerEl.style.border="2px solid red";
+    statusEl.innerHTML="Not Ready";
+    statusEl.style.color="red";
   };
 });
 socket.on("distributeHand", function(data){
@@ -281,13 +296,14 @@ socket.on("updateWinner", function(data){
   addWinner(data);
 });
 socket.on("startGame", function(){
-  READY_BUTTON.disabled=true;
+  READY_BUTTON.hidden=true;
+  READY_BUTTON.innerHTML=READY_TXT;
 });
 socket.on("endGame", function(){
-  READY_BUTTON.disabled=false;
+  READY_BUTTON.hidden=false;
 });
 socket.on("updatePlayers", function(data){
-  addPlayer(player);
+  addPlayer(data);
 });
 window.onload=function(){
   document.getElementById("submitHand").onclick=function(){

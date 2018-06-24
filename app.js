@@ -8,6 +8,13 @@ const session = require('express-session');
 const poker=require('./client/pokerGame.js');
 const ROOM_VIEW="room";
 const HOME_VIEW="home";
+const DEFAULT_NAMES=[
+  "James",
+  "Jones",
+  "Bob",
+  "Billiam",
+  "Bosef"
+];
 const GAME_TYPE={
   1:"ChinesePoker",
 }
@@ -15,6 +22,7 @@ var sessions={};
 var playerSockets={};
 var players={};
 var rooms={};
+
 /*
   Set up middleware function between these two paths
   in this case, it's the client directory with all our html,
@@ -211,7 +219,7 @@ function validateHand(submittedHand, room, player){
   if(player.turn!=room.playerTurn) return 1;
   if(submittedHand.length==4 || submittedHand.length>5 || submittedHand==null) return 2;
   if(!verifyHand(submittedHand, player)) return 3;
-  if(!poker.isHigherRanking(submittedHand, room.getLastHand())) return 4;
+  if(!poker.isHigherRanking(submittedHand, room.lastHand)) return 4;
   return 0;
 }
 
@@ -240,11 +248,14 @@ function submitHand(socket){
         });
         io.to(roomID).emit("endGame");
       }
-      if(!poker.isHighestCard(handArray))
-        room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+1;
-      room.addToPile(removedCards);
-      io.to(roomID).emit("updatePile", room.getLastHand());
+      if(!poker.isHighestCard(handArray)){
+        room.playerTurn=(room.maxPlayers-1==room.playerTurn)?0:room.playerTurn+1;
+        room.lastPlayerTurn=room.playerTurn;
+      }
+      room.lastHand=handArray;
+      io.to(roomID).emit("updatePile", room.lastHand);
       var turn=room.playerTurn;
+      console.log("turn", turn);
       io.to(roomID).emit("updateTurn", room.players[turn].name);
     }
     callback({handResult: result, playerHand:player.hand});
@@ -270,7 +281,7 @@ function obtainRooms(socket){
 
 function getPile(socket){
   socket.on("getPile", function(data, callback){
-    callback(rooms[data].getLastHand());
+    callback(rooms[data].lastHand);
   });
 }
 
@@ -306,7 +317,14 @@ function getMaster(socket){
 function passTurn(socket){
   socket.on("passTurn", function(data, callback){
     var room=rooms[data.roomID];
-    room.playerTurn=(room.maxPlayers==room.playerTurn)?0:room.playerTurn+1;
+    var player=players[data.playerSession];
+    room.playersPassed++;
+    if(room.maxPlayers-1==player.playersPassed){
+      room.playerTurn=room.lastPlayerTurn;
+      room.lastHand=null;
+    }else{
+      room.playerTurn=(room.maxPlayers-1==room.playerTurn)?0:room.playerTurn+1;
+    }
     io.to(room.id).emit("updateTurn", room.players[room.playerTurn].name);
   });
 }
@@ -321,10 +339,14 @@ function readyPlayer(socket){
     if(room.playersReady==room.maxPlayers && !room.startedGame){
       startGame(socket, room);
     }
-    //var socketID=player.socketID;
-    //if(socketID!=null)
     io.to(roomID).emit("updateReadyStatus", {player:player.name, status:player.isReady});
     callback(player.isReady);
+  });
+}
+
+function getDefaultName(socket){
+  socket.on("getDefaultName",function(data,callback){
+    callback(DEFAULT_NAMES.splice(0,1));
   });
 }
 
@@ -343,6 +365,7 @@ function socketConnect(socket){
   getCurrentPlayerTurn(socket);
   passTurn(socket);
   readyPlayer(socket);
+  getDefaultName(socket);
   //socketDisconnect(socket);
 }
 
@@ -358,10 +381,10 @@ Player=function(name, sessionID, roomID){
   this.roomID=roomID;
   this.sessionID=sessionID;
   this.hand=[];
-  this.enterRoom=function(isMaster, playerNumber){
+  this.enterRoom=function(isMaster, numOfPlayers){
     this.inRoom=true;
     this.isMaster=isMaster;
-    this.turn=playerNumber;
+    this.turn=numOfPlayers;
   }
   this.exitRoom=function(){
     this.inRoom=false;
@@ -395,9 +418,10 @@ Room=function(id, name, pass, maxPlayers){
   this.maxPlayers=maxPlayers;
   this.players=[];
   this.log=[];
-  this.cardPile=[];
+  this.handsLog=[];
   this.winners=0;
   this.playersReady=0;
+  this.playersPassed=0;
   this.startedGame=false;
   this.numOfPlayers=function(){
     return this.players.length;
@@ -408,6 +432,10 @@ Room=function(id, name, pass, maxPlayers){
   }
   this.endGame=function(){
     this.startedGame=false;
+    this.winners=0;
+    this.playersReady=0;
+    this.playersPassed=0;
+    this.cardPile=[];
   }
   this.createDeck=function(){
     var deck=poker.initializeDeck(GAME_TYPE[1]);
@@ -442,15 +470,9 @@ Room=function(id, name, pass, maxPlayers){
       this.log.push(event);
     }
   }
-  this.addToPile=function(hand){
-    this.cardPile.push(hand);
-  }
   this.addPlayer=function(player){
     if(player.isMaster) this.master=player;
     this.players.push(player);
-  }
-  this.getLastHand=function(){
-    return this.cardPile[this.cardPile.length-1];
   }
   rooms[id]=this;
 }
