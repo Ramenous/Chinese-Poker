@@ -214,6 +214,13 @@ function readyPlayer(){
     READY_BUTTON.innerHTML=(data)?"Cancel":"Ready";
   });
 }
+function sendPlayerMessage(){
+  var input=document.getElementById("playerInput");
+  PLAYER_INFO.msg=input.value;
+  socket.emit("submitPlayerMsg",PLAYER_INFO, function(){
+    input.value="";
+  });
+}
 function submitHand(hand){
   if(hand==null){
     displayMsg("You have not submitted any cards");
@@ -246,6 +253,9 @@ function submitHand(hand){
         case 4:
           displayMsg("Your hand is not high enough rank");
           updateHand();
+          break;
+        case 5:
+          displayMsg("Incorrect amount of cards played. Must match current submitted hand length");
           break;
       }
     });
@@ -317,6 +327,9 @@ window.onload=function(){
   }
   document.getElementById("ready").onclick=function(){
     readyPlayer();
+  }
+  document.getElementById("sendMsg").onclick=function(){
+    sendPlayerMessage();
   }
 }
 socket.on("updateLog", function(data){

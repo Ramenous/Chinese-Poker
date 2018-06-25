@@ -79,6 +79,7 @@ serv.listen(5000, function(){
 
 function roomEvent(name, roomID, status){
   var msg;
+  var room=rooms[roomID];
   switch(status){
     case 0:
       msg= name+" has created room "+roomID;
@@ -90,7 +91,7 @@ function roomEvent(name, roomID, status){
       msg= name+" has reconnected";
       break;
   }
-  return {isRoomEvent: true, logMsg:msg };
+  return {isRoomEvent:true, logMsg:msg};
 }
 
 function validLinkID(){
@@ -155,7 +156,7 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       }
       player.enterRoom(master, room.numOfPlayers());
       room.addPlayer(player);
-      room.addRoomEvent(msg);
+      room.addRoomMessage(msg);
     }else{
       var correctRoom=rooms[player.roomID];
       if(player.roomID!=roomID) {
@@ -164,8 +165,8 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
         //console.log("wrong room");
       }
       //console.log("player in room and room exists");
-      msg=[roomEvent(name, roomID,2)];
-      correctRoom.addRoomEvent(msg);
+      msg=[roomEvent(name, roomID, 2)];
+      correctRoom.addRoomMessage(msg);
     }
     io.to(roomID).emit("updatePlayers", player);
     io.to(roomID).emit("updateLog", msg);
@@ -220,6 +221,7 @@ function validateHand(submittedHand, room, player){
   if(submittedHand.length==4 || submittedHand.length>5 || submittedHand==null) return 2;
   if(!verifyHand(submittedHand, player)) return 3;
   if(!poker.isHigherRanking(submittedHand, room.lastHand)) return 4;
+  if(submittedHand.length!=player.hand.length) return 5;
   return 0;
 }
 
@@ -352,6 +354,17 @@ function getDefaultName(socket){
   });
 }
 
+function submitPlayerMsg(socket){
+  socket.on("submitPlayerMsg", function(data){
+    var roomID=data.roomID;
+    var room=rooms[roomID];
+    var player=players[data.playerSession];
+    var fullMsg={isRoomEvent:false, logMsg:player.name+": "+msg};
+    room.addRoomMessage(fullMsg);
+    io.to(roomID).emit("updateLog", fullMsg);
+  });
+}
+
 function socketConnect(socket){
   console.log("Connected!");
   obtainRooms(socket);
@@ -420,7 +433,6 @@ Room=function(id, name, pass, maxPlayers){
   this.maxPlayers=maxPlayers;
   this.players=[];
   this.log=[];
-  this.handsLog=[];
   this.winners=0;
   this.playersReady=0;
   this.playersPassed=0;
@@ -464,12 +476,12 @@ Room=function(id, name, pass, maxPlayers){
   this.kickPlayer=function(){
     //stops player from joining same room
   }
-  this.addRoomEvent=function(event){
+  this.addRoomMessage=function(msg){
     this.lastLogMsgIndex=this.log.length;
-    if(Array.isArray(event)){
-      this.log=this.log.concat(event);
+    if(Array.isArray(msg)){
+      this.log=this.log.concat(msg);
     }else{
-      this.log.push(event);
+      this.log.push(msg);
     }
   }
   this.addPlayer=function(player){
