@@ -1,5 +1,5 @@
 .matchContent{
-  display:table-cell;
+
 }
 #messageContent{
   z-index: 2;
@@ -27,22 +27,37 @@
 }
 #matchContainer{
   width:620px;
+  height:800px;
   border:3px solid red;
+}
+.blockBanner{
+  background-color: green;
+  text-align: center;
+  color:white;
+  font-size:20px;
+  padding:4px;
+}
+
+#playerHandContainer{
+  position:relative;
 }
 .handCard{
   position:absolute;
   border: 1px solid black;
 }
+.pileCard{
+  padding:3px;
+}
+
 .cardView{
-  width:73px;
-  height:96px;
+  width:69px;
+  height:114px;
   border: 3px solid grey;
   background-color: grey;
   border-radius: 3px;
-  top:5px;
-  margin-left:5px;
-  position:absolute;
+  display:flex;
 }
+
 #table{
   font-family:"Helvetica";
   text-align: center;
@@ -96,35 +111,88 @@
 }
 .cards{
   height:108px;
-  top:8px;
-  margin-left:20px;
+  top:15px;
+  padding:10px;
   position: absolute;
 }
 .handContainer{
-  border-radius: 10px 10px 0px 0px;
-  border:1px solid black;
-  height:140px;
+  border:1px solid #DCDEE1;
+  border-radius: 3px;
+  text-align: left;
+  height:160px;
   width:inherit;
+}
+.containerTitle{
+  padding-left:8px;
+}
+#playerOptions{
+  width:500px;
+  margin: auto;
+  border:3px solid blue;
+}
+#toolbar{
+  border:3px solid yellow;
+  margin:auto;
+  width:485px;
+  height:175px;
+  border-collapse: separate;
+  border-spacing: 15px;
 }
 .pileCard{
   padding: 4px;
 }
+#selectedContainer{
+  width:180px;
+  height:114px;
+  position:relative;
+}
+#viewContainer{
+  border: 3px solid red;
+}
+#cardDisplay{
+  padding: 10px;
+}
+#options{
+  width:140px;
+}
+.gameOption{
+  width:100px;
+  background-color: #4CAF50;
+  color:white;
+  border:1px solid #5fb962;
+  margin:2px;
+  padding:5px;
+}
+.toolbarBlock{
+  width:100px;
+  height:130px;
+  border:1px solid black;
+  display: table-cell;
+  margin: auto;
+}
+.handBlock{
+  width:100px;
+  height:130px;
+  border:1px solid black;
+  display: table-cell;
+  margin: auto;
+}
 #pile{
   text-align: center;
-  display:inline-block;
+  width:500px;
+  margin: auto;
   min-width: 77px;
   min-height: 102px;
   border:3px solid purple;
 }
 .cardContainer{
-  display:table-cell;
-  width:inherit;
-  height:108px;
+  width:200px;
+  height:114px;
   position:relative;
 }
 .players{
   display:inline-block;
-  width:120px;
+  width:150px;
   padding:3px;
   margin:3px;
   border: 3px solid red;

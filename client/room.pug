@@ -17,27 +17,32 @@ html
           div(id="playerData")
           div(id="master")
           div(id="pile")
-          button(id="ready") Ready
-          button(id="passTurn") Pass Turn
-          div(class="handContainer" id="selectedCardsContainer")
-            div(class="handBanner")
-              div(class="handBannerText") Selected Cards
-            div(class="cardContainer")
-              div(class="cardView")
-                img(class="cardDisplay" id="selectedCardView")
-              div(class="cards" id="selectedHand")
+            img(class="pileCard" src="/client/img/back.png")
+            img(class="pileCard" src="/client/img/back.png")
+            img(class="pileCard" src="/client/img/back.png")
+            img(class="pileCard" src="/client/img/back.png")
+            img(class="pileCard" src="/client/img/back.png")
+          div(id="playerOptions")
+          div(id="toolbar")
+            div(class="toolbarBlock" id="cardView")
+              div(class="blockBanner") Card
+              img(id="cardDisplay" height="94" src="/client/img/back.png")
+            div(class="toolbarBlock" id="options")
+              div(class="blockBanner") Options
+              button(class="gameOption" id="ready") Ready
+              button(class="gameOption" id="leaveRoom") Leave Room
+              button(class="gameOption" id="submitHand") Submit
+              button(class="gameOption" id="passTurn") Pass Turn
           div(class="handContainer" id="playerHandContainer")
-            div(class="handBanner")
-              div(class="handBannerText") Player Hand
-            div(class="cardContainer")
-              div(class="cardView")
-                img(class="cardDisplay" id="mainHandView")
+            div(class="handBlock" id="playerHandBlock")
+              div(class="blockBanner") Player Hand
               div(class="cards" id="playerHand")
-          button(id="submitHand") submit
+            div(class="handBlock" id="selectedHandBlock")
+              div(class="blockBanner") Selected Hand
+              div(class="cards" id="selectedHand")
       div(class="roomContent" id="roomComm")
         div(id="roomLog")
         input(id="playerInput")
         button(id="sendMsg") Send
-      div(id="leaveRoom")
   script(src="/socket.io/socket.io.js")
   script(src="/client/room.js")

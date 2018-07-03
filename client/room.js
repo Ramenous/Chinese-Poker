@@ -9,14 +9,14 @@ const PLAYER_TURN=document.getElementById("playerTurn");
 const SUB_HANDS=document.getElementById("subHandContainer");
 const SELECTED_HAND=document.getElementById("selectedHand");
 const MAIN_HAND=document.getElementById("playerHand");
-const SELECTED_VIEW=document.getElementById("selectedCardView");
-const MAIN_VIEW=document.getElementById("mainHandView");
+const CARD_VIEW=document.getElementById("cardDisplay");
 const MESSAGE=document.getElementById("messageContainer");
 const MASTER=document.getElementById("master");
 const PASS_TURN=document.getElementById("passTurn");
 const PLAYER_DATA=document.getElementById("playerData");
 const READY_BUTTON=document.getElementById("ready");
-
+const CARD_WIDTH=69;
+const CARD_HEIGHT=94;
 const READY_TXT="Ready";
 const CANCEL_TXT="Cancel";
 const NOT_READY_TXT="Not Ready";
@@ -27,7 +27,7 @@ const ERRORS={
   4:"Your hand is not high enough"
 }
 //Hand Display Start Position
-const HDSP=77;
+const HDSP=10;
 const SPACING=15;
 var selectedCards={};
 var selectedCardImgs={};
@@ -40,7 +40,7 @@ function extractLeftValue(element){
   return parseInt(element.style.left.split("px")[0]);
 }
 function shiftHand(hand, currPos){
-  for(var i=(currPos==HDSP)?0:(currPos-HDSP)/15; i<hand.length; i++){
+  for(var i=(currPos==HDSP)?0:(currPos-HDSP)/SPACING; i<hand.length; i++){
     var card=hand[i];
     card.style.left=extractLeftValue(card)-SPACING+"px";
   }
@@ -59,17 +59,6 @@ function getChildById(parent, id){
     if(children[c].id==id) return child;
   }
 }
-function assignCardView(card,element, isMouseOver){
-  var view=(isSelected(card))?SELECTED_VIEW:MAIN_VIEW;
-  var src=element.src;
-  if(isMouseOver){
-    view.style.display="initial";
-    view.src=src;
-  }else{
-    view.style.display="none";
-    view.src="";
-  }
-}
 function assignCardFunction(element,assignedCard){
   var card=assignedCard;
   element.onclick=function(){
@@ -82,22 +71,21 @@ function assignCardFunction(element,assignedCard){
       MAIN_HAND.removeChild(element);
       SELECTED_HAND.appendChild(element);
       shiftHand(MAIN_HAND.children,elLeft);
-      MAIN_VIEW.style.display="none";
     }else{
       delete selectedCards[card.display];
       delete selectedCardImgs[card.display];
       element.style.left=(MAIN_HAND.children.length*SPACING)+HDSP+"px";
       SELECTED_HAND.removeChild(element);
       MAIN_HAND.appendChild(element);
-      SELECTED_VIEW.style.display="none";
       shiftHand(SELECTED_HAND.children,elLeft);
     }
   }
+  var view=CARD_VIEW;
   element.onmouseover=function(){
-    assignCardView(card,element, true);
+    view.src=element.src;
   }
   element.onmouseout=function(){
-    assignCardView(card,element, false);
+    view.src="/client/img/back.png";
   }
 }
 function obtainHand(hand){
@@ -111,8 +99,10 @@ function addWinner(data){
   el.appendChild(t);
   document.getElementById("winners").appendChild(el);
 }
-function loadHand(hand, forPile){
+function loadHand(hand){
   var leftPos=HDSP;
+  var margin=10;
+  var containerSize=margin+CARD_WIDTH;
   for(var c in hand){
     var cardElement=new Image();
     var cardContainer= document.createElement("DIV");
@@ -121,15 +111,25 @@ function loadHand(hand, forPile){
     cardElement.id=card.display;
     cardElement.className="handCard";
     cardElement.style.left=leftPos+"px";
-    console.log("hand", hand);
-    console.log("ze Element:",cardElement);
     leftPos+=SPACING;
-    if(forPile==null){
-      assignCardFunction(cardElement,card);
-      HAND.appendChild(cardElement);
-    }else{
-      PILE.appendChild(cardElement);
-    }
+    assignCardFunction(cardElement,card);
+    containerSize+=SPACING;
+    HAND.appendChild(cardElement);
+  }
+  document.getElementById("playerHandContainer").style.width=containerSize+"px";
+}
+function loadPile(hand){
+  var leftPos=HDSP;
+  var containerSize=10;
+  for(var c in hand){
+    var cardElement=new Image();
+    var cardContainer= document.createElement("DIV");
+    var card=hand[c];
+    cardElement.src=card.src;
+    cardElement.id=card.display;
+    cardElement.className="handCard";
+    cardElement.style.left=leftPos+"px";
+    PILE.appendChild(cardElement);
   }
 }
 function updateHand(hand){
@@ -145,18 +145,26 @@ function updateHand(hand){
   }
   selectedCards={};
 }
+function createInfoElement(name, innerHTML, type){
+  var el=document.createElement("DIV");
+  el.innerHTML=type.charAt(0).toUpperCase() + type.slice(1)+": "+innerHTML;
+  el.className=type;
+  el.id=name+"-"+type;
+  return el;
+}
 function addPlayer(player){
   var container=document.createElement("DIV");
   var name=player.name;
   container.className="players";
-  var t = document.createTextNode("Name: "+name+" cards: "+player.hand.length);
-  container.appendChild(t);
-  var status=document.createElement("DIV");
-  status.innerHTML="Not Ready";
-  status.className="status";
-  status.id=name+"-status";
-  container.appendChild(status);
   container.id=name;
+  var elInfo={
+    "name":name,
+    "status":"Not Ready",
+    "card": "None",
+  }
+  for(var i in elInfo){
+    container.appendChild(createInfoElement(name,elInfo[i],i));
+  }
   PLAYER_DATA.appendChild(container);
 }
 function loadPlayers(players){
@@ -267,7 +275,7 @@ socket.emit("getPlayerHand", PLAYER_INFO, function(data){
   obtainHand(data);
 });
 socket.emit("getPile", ROOM, function(data){
-  loadHand(data,true);
+  loadPile(data);
 });
 socket.emit("getPlayers", ROOM, function(data){
   loadPlayers(data);
@@ -297,7 +305,7 @@ socket.on("distributeHand", function(data){
   obtainHand(data);
 });
 socket.on("updatePile", function(data){
-  loadHand(data, true);
+  loadPile(data);
 });
 socket.on("updateTurn", function(data){
   PLAYER_TURN.innerHTML="Player Turn: "+data;
