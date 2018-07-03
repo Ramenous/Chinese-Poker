@@ -175,7 +175,6 @@ function loadPlayers(players){
 }
 function clearHand(){
   var cards=HAND.childNodes;
-  console.log(cards[0]);
   for(var i=0; i<cards.length; i++){
     HAND.removeChild(cards[i]);
   }
@@ -243,7 +242,6 @@ function submitHand(hand){
       var playerHand=data.playerHand;
       switch(result){
         case 0:
-          console.log("this is the case");
           selectedCards={};
           selectedCardImgs={};
           SELECTED_HAND.innerHTML="";
@@ -289,7 +287,6 @@ socket.emit("getMaster", ROOM,function(data){
 socket.on("updateReadyStatus", function(data){
   var name=data.player;
   var playerEl=getPlayerElement(name);
-  console.log(playerEl);
   var statusEl=getChildById(playerEl, name+"-status");
   if(data.status){
     playerEl.style.border="2px solid green";
@@ -343,7 +340,6 @@ window.onload=function(){
 socket.on("updateLog", function(data){
   for(var roomEvent in data){
     var logData=data[roomEvent];
-    //console.log("data", data);
     var span = document.createElement("SPAN");
     var lineBreak = document.createElement("BR");
     if(logData.isRoomEvent) span.className="roomEvents";

@@ -53,7 +53,6 @@ app.get("/", function(req, res){
   var player=players[currSessionID];
   if(sessions[currSessionID]==null){
     sessions[currSessionID]=currSessionID;
-    console.log("New User has connected - Session: ", currSessionID);
     res.render(HOME_VIEW);
   }else{
     if(player!=null && player.inRoom){
@@ -61,7 +60,6 @@ app.get("/", function(req, res){
     }else{
       res.render(HOME_VIEW);
     }
-    console.log("User Session ", currSessionID, " has reconnected.");
   }
 });
 
@@ -147,7 +145,6 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
   app.get("/room"+roomID+"/"+name, function(req, res){
     var currSessionID=req.session.id;
     var player=(players[currSessionID]==null) ? new Player(name,currSessionID,roomID) : players[currSessionID];
-    //console.log("STATUSUUUU",!player.inRoom ,player.name, room==null);
     if(!player.inRoom || room==null){
       if(room==null){
         room=new Room(roomID, roomName, roomPass, numOfPlayers);
@@ -162,15 +159,12 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       if(player.roomID!=roomID) {
         room=correctRoom;
         selectedRoomID=player.roomID;
-        //console.log("wrong room");
       }
-      //console.log("player in room and room exists");
       msg=[roomEvent(name, roomID, 2)];
       correctRoom.addRoomMessage(msg);
     }
     io.to(roomID).emit("updatePlayers", player);
     io.to(roomID).emit("updateLog", msg);
-    //console.log("PLAYER: ", player.name, "IN ROOM: ",player.inRoom, "ROOM real?", room!=null, roomID);
     res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
   });
 }
@@ -196,7 +190,6 @@ function assignChannel(socket){
     var player=players[data.playerSession];
     playerSockets[socket.id]=player;
     player.socketID=socket.id;
-    //console.log("assigningSocket",player.name, player.socketID);
     socket.join(roomID);
     socket.emit("updateLog", rooms[roomID].log);
   });
