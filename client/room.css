@@ -1,5 +1,6 @@
-.matchContent{
-
+:root {
+    --cardContHeight: 96;
+    --cardContWidth: 71;
 }
 #messageContent{
   z-index: 2;
@@ -26,7 +27,7 @@
   border: 3px solid green;
 }
 #matchContainer{
-  width:620px;
+  width:720px;
   height:800px;
   border:3px solid red;
 }
@@ -38,32 +39,22 @@
   padding:4px;
 }
 
-#playerHandContainer{
-  position:relative;
-}
-.handCard{
-  position:absolute;
-  border: 1px solid black;
-}
-.pileCard{
-  padding:3px;
-}
-
 .cardView{
-  width:69px;
+  width:129px;
   height:114px;
-  border: 3px solid grey;
+  border: 3px solid green;
   background-color: grey;
   border-radius: 3px;
-  display:flex;
+  position: relative;
+  left:5px;
+  display: inline-block;
 }
-
-#table{
-  font-family:"Helvetica";
-  text-align: center;
-  width:inherit;
-  min-width: 500px;
-  height:400px;
+.handBlock{
+  height:130px;
+  position:relative;
+  left:150px;
+  border: 1px solid black;
+  display: inline-block;
 }
 .roomEvents{
   font-size: 12px;
@@ -103,25 +94,6 @@
 #roomContainer{
   display:flex;
 }
-#playerData{
-  text-align: center;
-  width:inherit;
-  height:100px;
-  border:1px solid orange;
-}
-.cards{
-  height:108px;
-  top:15px;
-  padding:10px;
-  position: absolute;
-}
-.handContainer{
-  border:1px solid #DCDEE1;
-  border-radius: 3px;
-  text-align: left;
-  height:160px;
-  width:inherit;
-}
 .containerTitle{
   padding-left:8px;
 }
@@ -138,30 +110,8 @@
   border-collapse: separate;
   border-spacing: 15px;
 }
-.pileCard{
-  padding: 4px;
-}
-#selectedContainer{
-  width:180px;
-  height:114px;
-  position:relative;
-}
 #viewContainer{
   border: 3px solid red;
-}
-#cardDisplay{
-  padding: 10px;
-}
-#options{
-  width:140px;
-}
-.gameOption{
-  width:100px;
-  background-color: #4CAF50;
-  color:white;
-  border:1px solid #5fb962;
-  margin:2px;
-  padding:5px;
 }
 .toolbarBlock{
   width:100px;
@@ -170,32 +120,10 @@
   display: table-cell;
   margin: auto;
 }
-.handBlock{
-  width:100px;
-  height:130px;
-  border:1px solid black;
-  display: table-cell;
-  margin: auto;
-}
-#pile{
-  text-align: center;
-  width:500px;
-  margin: auto;
-  min-width: 77px;
-  min-height: 102px;
-  border:3px solid purple;
-}
 .cardContainer{
   width:200px;
   height:114px;
   position:relative;
-}
-.players{
-  display:inline-block;
-  width:150px;
-  padding:3px;
-  margin:3px;
-  border: 3px solid red;
 }
 .status{
   color:red;
@@ -214,4 +142,119 @@
   height:100%;
   background-color: grey;
   opacity: 0.7;
+}
+#matchContent{
+  font-family:"Helvetica";
+  text-align: center;
+  width:inherit;
+  min-width: 500px;
+  height:400px;
+}
+/*\-----TABLE_UI-----\*/
+#pile{
+  top:70px;
+  position: relative;
+  margin: auto;
+  width:410px;
+  height:102px;
+  border:3px solid purple;
+}
+#table{
+  width:630px;
+  position:relative;
+  margin:auto;
+  text-align: center;
+  height:248px;
+  border: 1px solid blue;
+}
+#player1{
+  top:0px;
+  left:265px;
+}
+#player3{
+  top:94px;
+  right:0px;
+}
+#player2{
+  bottom:0px;
+  left:265px;
+}
+#player4{
+  top:94px;
+  left:0px;
+}
+.player{
+  position:absolute;
+  width:100px;
+  height:60px;
+  border: 1px solid green;
+}
+.info{
+  display:block;
+}
+.pileCard{
+  padding: 4px;
+}
+/*\-----PLAYER_UI-----\*/
+#playerHandSet{
+  border: 1px solid orange;
+  width:inherit;
+  text-align: center;
+  height:250px;
+}
+#options{
+  width:110px;
+  height:120px;
+  margin-right: 10px;
+  border:1px solid magenta;
+  display:inline-block;
+}
+.gameOption{
+  width:100px;
+  background-color: #4CAF50;
+  color:white;
+  border:1px solid #5fb962;
+  margin:2px;
+  padding:4px;
+  display: inline-block;
+}
+#view{
+  position:relative;
+  margin-left: 10px;
+  margin-right: 30px;
+  height:var(--cardContHeight);
+  width:var(--cardContWidth);
+  display:inline-block;
+  border: 1px solid green;
+}
+#cardDisplay{
+  border: 1px solid black;
+  position:absolute;
+  top:0px;
+  left:0px;
+}
+#playerHand{
+  border:1px solid blue;
+  width:400px;
+  position: relative;
+  display: inline-block;
+}
+#selectedHand{
+  height:var(--cardContHeight);
+  width:410px;
+  border:1px solid brown;
+  display:inline-block;
+  position: relative;
+}
+#selectedContainer{
+  margin-bottom: 10px;
+}
+.handCard{
+  position:absolute;
+  border: 1px solid black;
+}
+.selectedCard{
+  border: 1px solid black;
+  margin-left:5px;
+  margin-right:5px;
 }

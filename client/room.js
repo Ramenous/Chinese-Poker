@@ -3,7 +3,6 @@ const SESSION=document.getElementById("sessionID").innerHTML;
 const ROOM=document.getElementById("roomID").innerHTML;
 const PLAYER_INFO={playerSession:SESSION, roomID: ROOM};
 const LOG=document.getElementById("roomLog");
-const HAND=document.getElementById("playerHand");
 const PILE=document.getElementById("pile");
 const PLAYER_TURN=document.getElementById("playerTurn");
 const SUB_HANDS=document.getElementById("subHandContainer");
@@ -26,9 +25,7 @@ const ERRORS={
   3:"Unauthorized modification to hand, reverting to original hand",
   4:"Your hand is not high enough"
 }
-//Hand Display Start Position
-const HDSP=10;
-const SPACING=15;
+const SPACING=25;
 var selectedCards={};
 var selectedCardImgs={};
 var subHands=[]
@@ -40,7 +37,8 @@ function extractLeftValue(element){
   return parseInt(element.style.left.split("px")[0]);
 }
 function shiftHand(hand, currPos){
-  for(var i=(currPos==HDSP)?0:(currPos-HDSP)/SPACING; i<hand.length; i++){
+  //var margin=(isSelected)?CARD_WIDTH+SPACING:SPACING;
+  for(var i=(currPos==0)?0:currPos/SPACING; i<hand.length; i++){
     var card=hand[i];
     card.style.left=extractLeftValue(card)-SPACING+"px";
   }
@@ -67,17 +65,18 @@ function assignCardFunction(element,assignedCard){
     if(isSelected(card)){
       selectedCards[card.display]=card;
       selectedCardImgs[card.display]=element;
-      element.style.left=(SELECTED_HAND.children.length*SPACING)+HDSP+"px";
+      element.style.left=(SELECTED_HAND.children.length*(CARD_WIDTH+SPACING))+"px";
       MAIN_HAND.removeChild(element);
       SELECTED_HAND.appendChild(element);
+      element.className="selectedCard";
       shiftHand(MAIN_HAND.children,elLeft);
     }else{
       delete selectedCards[card.display];
       delete selectedCardImgs[card.display];
-      element.style.left=(MAIN_HAND.children.length*SPACING)+HDSP+"px";
+      element.style.left=(MAIN_HAND.children.length*SPACING)+"px";
       SELECTED_HAND.removeChild(element);
       MAIN_HAND.appendChild(element);
-      shiftHand(SELECTED_HAND.children,elLeft);
+      element.className="handCard";
     }
   }
   var view=CARD_VIEW;
@@ -100,9 +99,8 @@ function addWinner(data){
   document.getElementById("winners").appendChild(el);
 }
 function loadHand(hand){
-  var leftPos=HDSP;
-  var margin=10;
-  var containerSize=margin+CARD_WIDTH;
+  var leftPos=0;
+//  var containerSize=CARD_WIDTH;
   for(var c in hand){
     var cardElement=new Image();
     var cardContainer= document.createElement("DIV");
@@ -114,13 +112,14 @@ function loadHand(hand){
     leftPos+=SPACING;
     assignCardFunction(cardElement,card);
     containerSize+=SPACING;
-    HAND.appendChild(cardElement);
+    MAIN_HAND.appendChild(cardElement);
   }
-  document.getElementById("playerHandContainer").style.width=containerSize+"px";
+//  MAIN_HAND.style.width=containerSize+"px";
+  MAIN_HAND.style.height=CARD_HEIGHT+2;
 }
 function loadPile(hand){
-  var leftPos=HDSP;
-  var containerSize=10;
+  var leftPos=0;
+  var containerSize=0;
   for(var c in hand){
     var cardElement=new Image();
     var cardContainer= document.createElement("DIV");
@@ -133,13 +132,13 @@ function loadPile(hand){
   }
 }
 function updateHand(hand){
-  var cards=HAND.children;
+  var cards=MAIN_HAND.children;
   for(var card in selectedCards){
     var cardDisplay=selectedCards[card].display;
     for(var j=0; j<cards.length; j++){
       var selectedCard=cards[j];
       if(selectedCard.id==cardDisplay) {
-        HAND.removeChild(cards[j]);
+        MAIN_HAND.removeChild(cards[j]);
       }
     }
   }
@@ -152,20 +151,42 @@ function createInfoElement(name, innerHTML, type){
   el.id=name+"-"+type;
   return el;
 }
-function addPlayer(player){
-  var container=document.createElement("DIV");
+function populatePlayerInfo(parent, player){
+  var children=parent.children;
   var name=player.name;
-  container.className="players";
-  container.id=name;
-  var elInfo={
-    "name":name,
-    "status":"Not Ready",
-    "card": "None",
+  parent.name=name;
+  var cards=player.hand.length;
+  var status=player.isReady;
+  var info={
+    0:"name: "+player.name,
+    1:"cards: "+player.hand.length,
+    2: "Ready"
   }
-  for(var i in elInfo){
-    container.appendChild(createInfoElement(name,elInfo[i],i));
+  for(var i=0;i<children.length;i++){
+    var child=children[i];
+    child.className="info";
+    child.innerHTML+=info[i];
+    if(i==2){
+      if(player.isReady){
+        child.style.textDecoration="none";
+        child.style.color="green";
+      }else{
+        child.style.textDecoration="line-through";
+        child.style.color="red";
+      }
+    }
   }
-  PLAYER_DATA.appendChild(container);
+}
+function addPlayer(player){
+  var players=PLAYER_DATA.children;
+  for(var p in players){
+    var playerBlock=players[p];
+    if(playerBlock.name==null){
+      populatePlayerInfo(playerBlock,player);
+      playerBlock.hidden=false;
+      return;
+    }
+  }
 }
 function loadPlayers(players){
   for(var p in players){
@@ -174,9 +195,9 @@ function loadPlayers(players){
   }
 }
 function clearHand(){
-  var cards=HAND.childNodes;
+  var cards=MAIN_HAND.childNodes;
   for(var i=0; i<cards.length; i++){
-    HAND.removeChild(cards[i]);
+    MAIN_HAND.removeChild(cards[i]);
   }
 }
 function resetHand(hand){
