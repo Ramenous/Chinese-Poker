@@ -144,28 +144,27 @@ function updateHand(hand){
   }
   selectedCards={};
 }
-function createInfoElement(name, innerHTML, type){
-  var el=document.createElement("DIV");
-  el.innerHTML=type.charAt(0).toUpperCase() + type.slice(1)+": "+innerHTML;
-  el.className=type;
-  el.id=name+"-"+type;
-  return el;
-}
-function populatePlayerInfo(parent, player){
-  var children=parent.children;
+function createPlayerBlock(player, startedGame){
+  var container=document.createElement("DIV");
+  container.className="player";
+  container.id=(player.sessionID==PLAYER_INFO.playerSession)
+  ?"clientPlayer":"opponent"+PLAYER_DATA.length-1;
   var name=player.name;
-  parent.name=name;
+  container.name=name;
   var cards=player.hand.length;
   var status=player.isReady;
   var info={
-    0:"name: "+player.name,
-    1:"cards: "+player.hand.length,
-    2: "Ready"
+    "name": name,
+    "cards":"cards: "+cards,
+    "status":(startedGame)?"Ready":"In-Game";
   }
-  for(var i=0;i<children.length;i++){
-    var child=children[i];
+  var infoKeys=Object.keys(info);
+  var infoVals=Object.values(info);
+  for(var i=0;i<infoKeys.length;i++){
+    var child=document.createElement("SPAN");
     child.className="info";
-    child.innerHTML+=info[i];
+    child.id=name+infoKeys[i];
+    child.innerHTML+=infoVals[i];
     if(i==2){
       if(player.isReady){
         child.style.textDecoration="none";
@@ -175,23 +174,14 @@ function populatePlayerInfo(parent, player){
         child.style.color="red";
       }
     }
+    container.appendChild(child);
   }
-}
-function addPlayer(player){
-  var players=PLAYER_DATA.children;
-  for(var p in players){
-    var playerBlock=players[p];
-    if(playerBlock.name==null){
-      populatePlayerInfo(playerBlock,player);
-      playerBlock.hidden=false;
-      return;
-    }
-  }
+  PLAYER_DATA.appendChild(container);
 }
 function loadPlayers(players){
   for(var p in players){
     var player=players[p];
-    addPlayer(player);
+    createPlayerBlock(player, startedGame);
   }
 }
 function clearHand(){
@@ -308,16 +298,14 @@ socket.emit("getMaster", ROOM,function(data){
 socket.on("updateReadyStatus", function(data){
   var name=data.player;
   var playerEl=getPlayerElement(name);
-  var statusEl=getChildById(playerEl, name+"-status");
+  var statusEl=getChildById(playerEl, name+"status");
   if(data.status){
-    playerEl.style.border="2px solid green";
-    statusEl.innerHTML=READY_TXT;
+    statusEl.style.textDecoration="none";
     statusEl.style.color="green";
   }else{
-    playerEl.style.border="2px solid red";
-    statusEl.innerHTML="Not Ready";
+    statusEl.style.textDecoration="line-through";
     statusEl.style.color="red";
-  };
+  }
 });
 socket.on("distributeHand", function(data){
   obtainHand(data);
@@ -338,8 +326,23 @@ socket.on("startGame", function(){
 socket.on("endGame", function(){
   READY_BUTTON.hidden=false;
 });
-socket.on("updatePlayers", function(data){
-  addPlayer(data);
+socket.on("addPlayer", function(data){
+  createPlayerBlock(data.player, data.startedGame);
+});
+socket.on("updatePlayer", function(data){
+  var name=data.player.name;
+  var playerEl=getPlayerElement(name);
+  var statusEl=getChildById(playerEl, name+"status");
+  statusEl.style.color="green";
+  statusEl.innerHTML=(data.startedGame)?"In game":"Ready";
+
+});
+socket.on("disconnectPlayer", function(data){
+  var name=data.player.name;
+  var playerEl=getPlayerElement(name);
+  var statusEl=getChildById(playerEl, name+"status");
+  statusEl.style.color="grey";
+  statusEl.innerHTML="disconnected";
 });
 window.onload=function(){
   document.getElementById("submitHand").onclick=function(){

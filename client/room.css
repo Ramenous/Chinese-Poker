@@ -167,19 +167,19 @@
   height:248px;
   border: 1px solid blue;
 }
-#player1{
+#player2{
   top:0px;
   left:265px;
 }
-#player3{
+#opponent3{
   top:94px;
   right:0px;
 }
-#player2{
+#clientPlayer{
   bottom:0px;
   left:265px;
 }
-#player4{
+#opponent1{
   top:94px;
   left:0px;
 }

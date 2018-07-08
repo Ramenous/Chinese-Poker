@@ -154,16 +154,18 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       player.enterRoom(master, room.numOfPlayers());
       room.addPlayer(player);
       room.addRoomMessage(msg);
+      io.to(roomID).emit("addPlayer", {player:player, startedGame: room.startedGame});
     }else{
       var correctRoom=rooms[player.roomID];
       if(player.roomID!=roomID) {
         room=correctRoom;
         selectedRoomID=player.roomID;
       }
+      player.disconnected=false;
       msg=[roomEvent(name, roomID, 2)];
       correctRoom.addRoomMessage(msg);
+      io.to(roomID).emit("updatePlayer", {playerName:player.name, startedGame:room.startedGame});
     }
-    io.to(roomID).emit("updatePlayers", player);
     io.to(roomID).emit("updateLog", msg);
     res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
   });
@@ -263,8 +265,8 @@ function socketDisconnect(socket){
     var id=socket.id;
     var player=playerSockets[id];
     if(player!=null){
-      delete player.socketID;
-      delete playerSockets[id];
+      player.disconnected=true;
+      io.to(roomID).emit("disconnectPlayer", player.name);
     }
   });
 }
@@ -374,7 +376,7 @@ function socketConnect(socket){
   passTurn(socket);
   readyPlayer(socket);
   getDefaultName(socket);
-  //socketDisconnect(socket);
+  socketDisconnect(socket);
 }
 
 var io = socketIO(serv);
@@ -399,7 +401,8 @@ Player=function(name, sessionID, roomID){
     this.isMaster=false;
     this.isReady=false;
     this.winner=false;
-    delete player.turn;
+    delete this.roomID;
+    delete this.turn;
   }
   this.addCard=function(card){
     this.hand.push(card);
