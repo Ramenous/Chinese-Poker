@@ -18,6 +18,12 @@ const DEFAULT_NAMES=[
 const GAME_TYPE={
   1:"ChinesePoker",
 }
+const PLAYER_STATUS={
+  1:"Not Ready",
+  2:"Ready",
+  3:"Disconnected",
+  4:"In Game"
+}
 var sessions={};
 var playerSockets={};
 var players={};
@@ -127,7 +133,9 @@ function startGame(socket, room){
   room.startGame();
   for(var p in players){
     var player=players[p];
+    player.status=4;
     var socketID=player.socketID;
+    updatePlayerStatus(roomID, player.name, player.status);
     //Using socket ID because each player's hand is unique
     if(socketID!=null)
       io.to(socketID).emit("distributeHand", player.hand);
@@ -136,7 +144,13 @@ function startGame(socket, room){
   io.to(roomID).emit("updateTurn", players[index].name);
   io.to(roomID).emit("startGame");
 }
-
+function updatePlayerStatus(roomID, name, status){
+  var dataObj={
+    name:name,
+    status:PLAYER_STATUS[status]
+  };
+  io.to(roomID).emit("updatePlayer", dataObj);
+}
 function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
   var selectedRoomID=roomID;
   var room=rooms[roomID];
@@ -161,10 +175,10 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
         room=correctRoom;
         selectedRoomID=player.roomID;
       }
-      player.disconnected=false;
+      player.status=(room.startedGame)?3:1;
       msg=[roomEvent(name, roomID, 2)];
       correctRoom.addRoomMessage(msg);
-      io.to(roomID).emit("updatePlayer", {playerName:player.name, startedGame:room.startedGame});
+      updatePlayerStatus(roomID, player.name, player.status);
     }
     io.to(roomID).emit("updateLog", msg);
     res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
@@ -265,8 +279,10 @@ function socketDisconnect(socket){
     var id=socket.id;
     var player=playerSockets[id];
     if(player!=null){
-      player.disconnected=true;
-      io.to(roomID).emit("disconnectPlayer", player.name);
+      player.status=3;
+      var roomID=player.roomID;
+      if(roomID!=null)
+        updatePlayerStatus(player.name, player.status);
     }
   });
 }
@@ -290,7 +306,18 @@ function getCurrentPlayerTurn(socket){
 }
 function getPlayers(socket){
   socket.on("getPlayers", function(data, callback){
-    callback(rooms[data].players);
+    var room=rooms[data];
+    var players=room.players;
+    var playerInfos=[];
+    for(var p in players){
+      var player=players[p];
+      playerInfos.push({
+        name: player.name,
+        status: PLAYER_STATUS[player.status],
+        cards: player.hand.length
+      });
+    }
+    callback({players:playerInfos, startedGame:room.startedGame});
   });
 }
 
@@ -333,13 +360,13 @@ function readyPlayer(socket){
     var roomID=data.roomID;
     var room=rooms[roomID];
     var player=players[data.playerSession];
-    player.isReady=!player.isReady;
-    (player.isReady)?room.playersReady++:room.playersReady--;
+    player.status=(player.status==1)?2:1;
+    (player.status)?room.playersReady++:room.playersReady--;
     if(room.playersReady==room.maxPlayers && !room.startedGame){
       startGame(socket, room);
     }
-    io.to(roomID).emit("updateReadyStatus", {player:player.name, status:player.isReady});
-    callback(player.isReady);
+    io.to(roomID).emit("updateReadyStatus", {name:player.name, status:PLAYER_STATUS[player.status], startedGame:room.startedGame});
+    callback(player.status);
   });
 }
 
@@ -359,7 +386,22 @@ function submitPlayerMsg(socket){
     io.to(roomID).emit("updateLog", fullMsg);
   });
 }
+function connectPlayer(socket){
+  socket.on("connectPlayer", function(data){
+    var roomID=data.roomID;
+    var room=rooms[roomID];
+    var players=room.players;
+    var sessionID=data.playerSession;
 
+    for(var p in players){
+      var player=players[p];
+      if(player.sessionID==sessionID && player.status==3){
+        player.status=(room.startedGame)?4:1;
+        updatePlayerStatus(roomID, player.name, player.status);
+      }
+    }
+  });
+}
 function socketConnect(socket){
   console.log("Connected!");
   obtainRooms(socket);
@@ -376,6 +418,7 @@ function socketConnect(socket){
   passTurn(socket);
   readyPlayer(socket);
   getDefaultName(socket);
+  connectPlayer(socket)
   socketDisconnect(socket);
 }
 
@@ -385,7 +428,7 @@ io.sockets.on("connection", socketConnect);
 Player=function(name, sessionID, roomID){
   this.name=name;
   this.inRoom=false;
-  this.isReady=false;
+  this.status=1;
   this.isMaster=false;
   this.winner=false;
   this.roomID=roomID;
@@ -399,7 +442,7 @@ Player=function(name, sessionID, roomID){
   this.exitRoom=function(){
     this.inRoom=false;
     this.isMaster=false;
-    this.isReady=false;
+    this.status=0;
     this.winner=false;
     delete this.roomID;
     delete this.turn;

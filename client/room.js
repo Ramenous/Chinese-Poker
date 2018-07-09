@@ -25,6 +25,12 @@ const ERRORS={
   3:"Unauthorized modification to hand, reverting to original hand",
   4:"Your hand is not high enough"
 }
+const STATUS_COLOR={
+  "Not Ready":"red",
+  "Ready":"green",
+  "Disconnected":"grey",
+  "In game":"green"
+}
 const SPACING=25;
 var selectedCards={};
 var selectedCardImgs={};
@@ -47,7 +53,7 @@ function getPlayerElement(name){
   var players=PLAYER_DATA.children;
   for(var p in players){
     var player=players[p];
-    if (player.id==name) return player;
+    if (player.name==name) return player;
   }
 }
 function getChildById(parent, id){
@@ -151,12 +157,12 @@ function createPlayerBlock(player, startedGame){
   ?"clientPlayer":"opponent"+PLAYER_DATA.length-1;
   var name=player.name;
   container.name=name;
-  var cards=player.hand.length;
-  var status=player.isReady;
+  var cards=player.cards;
+  var status=player.status;
   var info={
     "name": name,
     "cards":"cards: "+cards,
-    "status":(startedGame)?"Ready":"In-Game";
+    "status":status
   }
   var infoKeys=Object.keys(info);
   var infoVals=Object.values(info);
@@ -165,20 +171,18 @@ function createPlayerBlock(player, startedGame){
     child.className="info";
     child.id=name+infoKeys[i];
     child.innerHTML+=infoVals[i];
-    if(i==2){
-      if(player.isReady){
-        child.style.textDecoration="none";
-        child.style.color="green";
-      }else{
-        child.style.textDecoration="line-through";
-        child.style.color="red";
-      }
-    }
+    if(i==2)child.style.color=STATUS_COLOR[status];
     container.appendChild(child);
   }
   PLAYER_DATA.appendChild(container);
 }
-function loadPlayers(players){
+function modifyPlayerStatus(name, status){
+  var playerEl=getPlayerElement(name);
+  var statusEl=getChildById(playerEl, name+"status");
+  statusEl.style.color=STATUS_COLOR[status];
+  statusEl.innerHTML=status;
+}
+function loadPlayers(players, startedGame){
   for(var p in players){
     var player=players[p];
     createPlayerBlock(player, startedGame);
@@ -229,7 +233,7 @@ function passTurn(){
 }
 function readyPlayer(){
   socket.emit("readyPlayer", PLAYER_INFO, function(data){
-    READY_BUTTON.innerHTML=(data)?"Cancel":"Ready";
+    READY_BUTTON.innerHTML=(data==2)?"Cancel":"Ready";
   });
 }
 function sendPlayerMessage(){
@@ -287,8 +291,9 @@ socket.emit("getPile", ROOM, function(data){
   loadPile(data);
 });
 socket.emit("getPlayers", ROOM, function(data){
-  loadPlayers(data);
+  loadPlayers(data.players, data.startedGame);
 });
+socket.emit("connectPlayer", PLAYER_INFO);
 socket.emit("getTurn", ROOM, function(data){
   PLAYER_TURN.innerHTML="Player turn: "+data;
 });
@@ -296,16 +301,7 @@ socket.emit("getMaster", ROOM,function(data){
   MASTER.innerHTML="Master: "+data;
 });
 socket.on("updateReadyStatus", function(data){
-  var name=data.player;
-  var playerEl=getPlayerElement(name);
-  var statusEl=getChildById(playerEl, name+"status");
-  if(data.status){
-    statusEl.style.textDecoration="none";
-    statusEl.style.color="green";
-  }else{
-    statusEl.style.textDecoration="line-through";
-    statusEl.style.color="red";
-  }
+  modifyPlayerStatus(data.name, data.status, data.startedGame);
 });
 socket.on("distributeHand", function(data){
   obtainHand(data);
@@ -320,7 +316,7 @@ socket.on("updateWinner", function(data){
   addWinner(data);
 });
 socket.on("startGame", function(){
-  READY_BUTTON.hidden=true;
+  READY_BUTTON.disabled=true;
   READY_BUTTON.innerHTML=READY_TXT;
 });
 socket.on("endGame", function(){
@@ -330,19 +326,7 @@ socket.on("addPlayer", function(data){
   createPlayerBlock(data.player, data.startedGame);
 });
 socket.on("updatePlayer", function(data){
-  var name=data.player.name;
-  var playerEl=getPlayerElement(name);
-  var statusEl=getChildById(playerEl, name+"status");
-  statusEl.style.color="green";
-  statusEl.innerHTML=(data.startedGame)?"In game":"Ready";
-
-});
-socket.on("disconnectPlayer", function(data){
-  var name=data.player.name;
-  var playerEl=getPlayerElement(name);
-  var statusEl=getChildById(playerEl, name+"status");
-  statusEl.style.color="grey";
-  statusEl.innerHTML="disconnected";
+  modifyPlayerStatus(data.name, data.status);
 });
 window.onload=function(){
   document.getElementById("submitHand").onclick=function(){
