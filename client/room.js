@@ -159,10 +159,12 @@ function createPlayerBlock(player, startedGame){
   container.name=name;
   var cards=player.cards;
   var status=player.status;
+  var time=player.time;
   var info={
     "name": name,
     "cards":"cards: "+cards,
     "status":status
+    "time":(status==3)?"reconnecting in: "+time+"s":"";
   }
   var infoKeys=Object.keys(info);
   var infoVals=Object.values(info);
@@ -171,7 +173,7 @@ function createPlayerBlock(player, startedGame){
     child.className="info";
     child.id=name+infoKeys[i];
     child.innerHTML+=infoVals[i];
-    if(i==2)child.style.color=STATUS_COLOR[status];
+    if(i==2) child.style.color=STATUS_COLOR[status];
     container.appendChild(child);
   }
   PLAYER_DATA.appendChild(container);
@@ -181,6 +183,12 @@ function modifyPlayerStatus(name, status){
   var statusEl=getChildById(playerEl, name+"status");
   statusEl.style.color=STATUS_COLOR[status];
   statusEl.innerHTML=status;
+}
+function updatePlayerTime(name, time){
+  var playerEl=getPlayerElement(name);
+  var timeEl=getChildById(playerEl, name+"time");
+  timeEl.innerHTML="reconnecting in: "+time+"s";
+
 }
 function loadPlayers(players, startedGame){
   for(var p in players){
@@ -327,6 +335,19 @@ socket.on("addPlayer", function(data){
 });
 socket.on("updatePlayer", function(data){
   modifyPlayerStatus(data.name, data.status);
+});
+socket.on("removePlayer", function(data){
+  var players=PLAYER_DATA.children;
+  for(var p in players){
+    var player=players[p];
+    if(data==player.name) PLAYER_DATA.removeChild(player);
+  }
+});
+socket.on("updatePlayerTimers", function(data){
+  for(var p in data){
+    var player=data[p];
+    updatePlayerTime(player.name, player.time);
+  }
 });
 window.onload=function(){
   document.getElementById("submitHand").onclick=function(){

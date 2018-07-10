@@ -8,6 +8,8 @@ const session = require('express-session');
 const poker=require('./client/pokerGame.js');
 const ROOM_VIEW="room";
 const HOME_VIEW="home";
+const RECONNECT_TIME=30;
+var io = socketIO(serv);
 const DEFAULT_NAMES=[
   "James",
   "Jones",
@@ -26,6 +28,7 @@ const PLAYER_STATUS={
 }
 var sessions={};
 var playerSockets={};
+var discPlayers={};
 var players={};
 var rooms={};
 
@@ -62,7 +65,7 @@ app.get("/", function(req, res){
     res.render(HOME_VIEW);
   }else{
     if(player!=null && player.inRoom){
-      res.render(ROOM_VIEW, {roomID: player.room, sessionID: currSessionID});
+      res.render(ROOM_VIEW, {roomID: player.roomID, sessionID: currSessionID});
     }else{
       res.render(HOME_VIEW);
     }
@@ -168,7 +171,14 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       player.enterRoom(master, room.numOfPlayers());
       room.addPlayer(player);
       room.addRoomMessage(msg);
-      io.to(roomID).emit("addPlayer", {player:player, startedGame: room.startedGame});
+      var playerInfo={
+        name: player.name,
+        status: PLAYER_STATUS[player.status],
+        cards: player.hand.length,
+        sessionID:player.sessionID,
+        time:player.reconnectTimer
+      };
+      io.to(roomID).emit("addPlayer", {player:playerInfo, startedGame: room.startedGame});
     }else{
       var correctRoom=rooms[player.roomID];
       if(player.roomID!=roomID) {
@@ -207,6 +217,7 @@ function assignChannel(socket){
     playerSockets[socket.id]=player;
     player.socketID=socket.id;
     socket.join(roomID);
+    //console.log("rooms:",rooms, "roomid:",roomID, "isroom",rooms[roomID]);
     socket.emit("updateLog", rooms[roomID].log);
   });
 }
@@ -234,6 +245,23 @@ function validateHand(submittedHand, room, player){
   return 0;
 }
 
+function reconnectCountDown(){
+  var playerTimes=[];
+  for(var p in discPlayers){
+    var player=discPlayers[p];
+    var roomID=player.roomID;
+    var room=rooms[roomID];
+    player.reconnectTimer--;
+    if(player.reconnectTimer==0){
+      room.removePlayer(player);
+      player.exitRoom();
+      io.to(roomID).emit("removePlayer",player.name);
+    }else{
+      playerTimes.push({player:player.name, time:player.reconnectTimer});
+    }
+  }
+  io.to(roomID).emit("updatePlayerTimers", playerTimes);
+}
 
 function submitHand(socket){
   socket.on("submitHand", function(data, callback){
@@ -281,8 +309,11 @@ function socketDisconnect(socket){
     if(player!=null){
       player.status=3;
       var roomID=player.roomID;
-      if(roomID!=null)
-        updatePlayerStatus(player.name, player.status);
+      delete playerSockets[id];
+      if(roomID!=null){
+        updatePlayerStatus(roomID,player.name, player.status);
+        discPlayers[player.sessionID]=player;
+      }
     }
   });
 }
@@ -314,7 +345,8 @@ function getPlayers(socket){
       playerInfos.push({
         name: player.name,
         status: PLAYER_STATUS[player.status],
-        cards: player.hand.length
+        cards: player.hand.length,
+        sessionID:player.sessionID
       });
     }
     callback({players:playerInfos, startedGame:room.startedGame});
@@ -372,7 +404,7 @@ function readyPlayer(socket){
 
 function getDefaultName(socket){
   socket.on("getDefaultName",function(data,callback){
-    callback(DEFAULT_NAMES.splice(0,1));
+    callback(DEFAULT_NAMES.splice(0, 1));
   });
 }
 
@@ -392,11 +424,11 @@ function connectPlayer(socket){
     var room=rooms[roomID];
     var players=room.players;
     var sessionID=data.playerSession;
-
     for(var p in players){
       var player=players[p];
       if(player.sessionID==sessionID && player.status==3){
         player.status=(room.startedGame)?4:1;
+        player.reconnectTimer=RECONNECT_TIME;
         updatePlayerStatus(roomID, player.name, player.status);
       }
     }
@@ -422,7 +454,6 @@ function socketConnect(socket){
   socketDisconnect(socket);
 }
 
-var io = socketIO(serv);
 io.sockets.on("connection", socketConnect);
 
 Player=function(name, sessionID, roomID){
@@ -431,6 +462,7 @@ Player=function(name, sessionID, roomID){
   this.status=1;
   this.isMaster=false;
   this.winner=false;
+  this.reconnectTimer=RECONNECT_TIME;
   this.roomID=roomID;
   this.sessionID=sessionID;
   this.hand=[];
@@ -444,6 +476,7 @@ Player=function(name, sessionID, roomID){
     this.isMaster=false;
     this.status=0;
     this.winner=false;
+    this.reconnectTimer=RECONNECT_TIME;
     delete this.roomID;
     delete this.turn;
   }
@@ -501,7 +534,7 @@ Room=function(id, name, pass, maxPlayers){
   this.removePlayer=function(player){
     var players=this.players;
     for(var p in players){
-      if(players[p].name==player.name) players.splice[i];
+      if(players[p].sessionID==player.sessionID) players.splice[i];
     }
     if(players.length==0){
       delete rooms[this.id];
