@@ -19,6 +19,9 @@ const CARD_HEIGHT=94;
 const READY_TXT="Ready";
 const CANCEL_TXT="Cancel";
 const NOT_READY_TXT="Not Ready";
+var REMOVE_TXT=function(time){
+  return "Removing in: "+time+"s";
+};
 const ERRORS={
   1:"It is not your turn",
   2:"Incorrect amount of cards. The valid amount of cards for a valid hand is 1,3,4 & 5",
@@ -153,8 +156,6 @@ function updateHand(hand){
 function createPlayerBlock(player, startedGame){
   var container=document.createElement("DIV");
   container.className="player";
-  container.id=(player.sessionID==PLAYER_INFO.playerSession)
-  ?"clientPlayer":"opponent"+PLAYER_DATA.length-1;
   var name=player.name;
   container.name=name;
   var cards=player.cards;
@@ -163,8 +164,8 @@ function createPlayerBlock(player, startedGame){
   var info={
     "name": name,
     "cards":"cards: "+cards,
-    "status":status
-    "time":(status==3)?"reconnecting in: "+time+"s":"";
+    "status":status,
+    "time":(status==3)?REMOVE_TXT(time):""
   }
   var infoKeys=Object.keys(info);
   var infoVals=Object.values(info);
@@ -177,6 +178,10 @@ function createPlayerBlock(player, startedGame){
     container.appendChild(child);
   }
   PLAYER_DATA.appendChild(container);
+  var players=PLAYER_DATA.children.length;
+  var opponentNum=(players>0)?players-1:0;
+  container.id=(player.sessionID==PLAYER_INFO.playerSession)
+  ?"clientPlayer":"opponent"+opponentNum;
 }
 function modifyPlayerStatus(name, status){
   var playerEl=getPlayerElement(name);
@@ -187,8 +192,7 @@ function modifyPlayerStatus(name, status){
 function updatePlayerTime(name, time){
   var playerEl=getPlayerElement(name);
   var timeEl=getChildById(playerEl, name+"time");
-  timeEl.innerHTML="reconnecting in: "+time+"s";
-
+  timeEl.innerHTML=(time==null)?"":REMOVE_TXT(time);
 }
 function loadPlayers(players, startedGame){
   for(var p in players){
@@ -290,7 +294,6 @@ function submitHand(hand){
     });
   }
 }
-
 socket.emit("assignChannel", PLAYER_INFO);
 socket.emit("getPlayerHand", PLAYER_INFO, function(data){
   obtainHand(data);
@@ -344,9 +347,11 @@ socket.on("removePlayer", function(data){
   }
 });
 socket.on("updatePlayerTimers", function(data){
-  for(var p in data){
-    var player=data[p];
-    updatePlayerTime(player.name, player.time);
+  if(data.length>0){
+    for(var p in data){
+      var player=data[p];
+      updatePlayerTime(player.name, player.time);
+    }
   }
 });
 window.onload=function(){

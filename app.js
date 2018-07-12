@@ -253,14 +253,16 @@ function reconnectCountDown(){
     var room=rooms[roomID];
     player.reconnectTimer--;
     if(player.reconnectTimer==0){
+      delete discPlayers[player.sessionID];
       room.removePlayer(player);
       player.exitRoom();
       io.to(roomID).emit("removePlayer",player.name);
     }else{
-      playerTimes.push({player:player.name, time:player.reconnectTimer});
+      playerTimes.push({name:player.name, time:player.reconnectTimer});
     }
   }
-  io.to(roomID).emit("updatePlayerTimers", playerTimes);
+  if(playerTimes.length>0)
+    io.to(roomID).emit("updatePlayerTimers", playerTimes);
 }
 
 function submitHand(socket){
@@ -346,6 +348,7 @@ function getPlayers(socket){
         name: player.name,
         status: PLAYER_STATUS[player.status],
         cards: player.hand.length,
+        time: player.reconnectTimer,
         sessionID:player.sessionID
       });
     }
@@ -429,11 +432,14 @@ function connectPlayer(socket){
       if(player.sessionID==sessionID && player.status==3){
         player.status=(room.startedGame)?4:1;
         player.reconnectTimer=RECONNECT_TIME;
+        delete discPlayers[player.sessionID];
         updatePlayerStatus(roomID, player.name, player.status);
+        io.to(roomID).emit("updatePlayerTimers", [{name:player.name}]);
       }
     }
   });
 }
+
 function socketConnect(socket){
   console.log("Connected!");
   obtainRooms(socket);
@@ -455,7 +461,7 @@ function socketConnect(socket){
 }
 
 io.sockets.on("connection", socketConnect);
-
+setInterval(function(){ reconnectCountDown(); }, 1000);
 Player=function(name, sessionID, roomID){
   this.name=name;
   this.inRoom=false;
@@ -534,7 +540,7 @@ Room=function(id, name, pass, maxPlayers){
   this.removePlayer=function(player){
     var players=this.players;
     for(var p in players){
-      if(players[p].sessionID==player.sessionID) players.splice[i];
+      if(players[p].sessionID==player.sessionID) players.splice[p];
     }
     if(players.length==0){
       delete rooms[this.id];
