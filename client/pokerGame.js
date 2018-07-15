@@ -5,7 +5,6 @@ const LOWEST_RANK=2;
 const HIGHEST_RANK=14;
 const CARD_WIDTH=69;
 const CARD_HEIGHT=94;
-const hello;
 const IMG_DIR="/client/img/";
 const IMG_EXT=".png";
 const RANKING={
@@ -195,7 +194,6 @@ function isHigherRanking(hand1, hand2){
   }
   var hand1Rank=findHandRanking(hand1);
   var hand2Rank=findHandRanking(hand2);
-  console.log("ranks:",hand1Rank, hand2Rank);
   return (hand1Rank==hand2Rank) ?COMPARE_HAND[HIERARCHY[hand1Rank]](hand1,hand2)>0: hand1Rank>hand2Rank;
 }
 

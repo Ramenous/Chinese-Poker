@@ -128,7 +128,6 @@ function loadHand(hand){
 }
 function clearChildren(parent){
   var cards=parent.childNodes;
-  console.log(cards);
   while(cards.length>0){
     parent.removeChild(cards[0]);
   }
