@@ -5,6 +5,7 @@ const LOWEST_RANK=2;
 const HIGHEST_RANK=14;
 const CARD_WIDTH=69;
 const CARD_HEIGHT=94;
+const hello;
 const IMG_DIR="/client/img/";
 const IMG_EXT=".png";
 const RANKING={
