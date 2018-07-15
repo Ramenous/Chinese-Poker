@@ -1,8 +1,11 @@
 html
     link(rel="stylesheet", href="/client/home.css")
     script(src="/socket.io/socket.io.js")
-    script(src="/client/home.js")
     body
+      div(id="roomID" hidden) #{roomID}
+      div(id="playerName" hidden) #{playerName}
+      div(id="disconnected" hidden) #{disconnected}
+      script(src="/client/home.js")
       div(id="lobby")
         div(id="lobbyBanner")
           p(class="bannerText") Chinese Poker Online
@@ -46,3 +49,4 @@ html
           button(id="newRoom") Create
           button(id="chooseName") Choose Name
           button(id="joinRoom") Join
+        button(id="reconnectPlayer" hidden)

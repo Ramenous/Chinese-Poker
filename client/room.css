@@ -167,11 +167,11 @@
   height:248px;
   border: 1px solid blue;
 }
-#opponent2{
+#opponent1{
   top:0px;
   left:265px;
 }
-#opponent3{
+#opponent2{
   top:94px;
   right:0px;
 }
@@ -179,7 +179,7 @@
   bottom:0px;
   left:265px;
 }
-#opponent1{
+#opponent0{
   top:94px;
   left:0px;
 }
@@ -193,7 +193,8 @@
   display:block;
 }
 .pileCard{
-  padding: 4px;
+  border: 1px solid black;
+  margin: 4px;
 }
 /*\-----PLAYER_UI-----\*/
 #playerHandSet{

@@ -120,22 +120,30 @@ function loadHand(hand){
     cardElement.style.left=leftPos+"px";
     leftPos+=SPACING;
     assignCardFunction(cardElement,card);
-    containerSize+=SPACING;
+    //containerSize+=SPACING;
     MAIN_HAND.appendChild(cardElement);
   }
 //  MAIN_HAND.style.width=containerSize+"px";
   MAIN_HAND.style.height=CARD_HEIGHT+2;
 }
+function clearChildren(parent){
+  var cards=parent.childNodes;
+  console.log(cards);
+  while(cards.length>0){
+    parent.removeChild(cards[0]);
+  }
+}
 function loadPile(hand){
   var leftPos=0;
   var containerSize=0;
+  clearChildren(PILE);
   for(var c in hand){
     var cardElement=new Image();
     var cardContainer= document.createElement("DIV");
     var card=hand[c];
     cardElement.src=card.src;
     cardElement.id=card.display;
-    cardElement.className="handCard";
+    cardElement.className="pileCard";
     cardElement.style.left=leftPos+"px";
     PILE.appendChild(cardElement);
   }
@@ -177,8 +185,8 @@ function createPlayerBlock(player, startedGame){
     if(i==2) child.style.color=STATUS_COLOR[status];
     container.appendChild(child);
   }
-  PLAYER_DATA.appendChild(container);
   var players=PLAYER_DATA.children.length;
+  PLAYER_DATA.appendChild(container);
   var opponentNum=(players>0)?players-1:0;
   container.id=(player.sessionID==PLAYER_INFO.playerSession)
   ?"clientPlayer":"opponent"+opponentNum;
@@ -200,15 +208,9 @@ function loadPlayers(players, startedGame){
     createPlayerBlock(player, startedGame);
   }
 }
-function clearHand(){
-  var cards=MAIN_HAND.childNodes;
-  for(var i=0; i<cards.length; i++){
-    MAIN_HAND.removeChild(cards[i]);
-  }
-}
 function resetHand(hand){
   playerHand=hand;
-  clearHand();
+  clearChildren(MAIN_HAND);
   loadHand(hand);
   clearSubHand();
 }
@@ -239,9 +241,7 @@ function leaveRoom(){
   window.location.href="/";
 }
 function passTurn(){
-  socket.emit("passTurn", PLAYER_INFO,function(data){
-    if(data) displayMsg();
-  });
+  socket.emit("passTurn", PLAYER_INFO);
 }
 function readyPlayer(){
   socket.emit("readyPlayer", PLAYER_INFO, function(data){
@@ -329,6 +329,7 @@ socket.on("updateWinner", function(data){
 socket.on("startGame", function(){
   READY_BUTTON.disabled=true;
   READY_BUTTON.innerHTML=READY_TXT;
+
 });
 socket.on("endGame", function(){
   READY_BUTTON.hidden=false;

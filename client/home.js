@@ -1,6 +1,8 @@
 var socket = io();
 var name;
 var rooms;
+const PLAYER_DISCONNECTED=document.getElementById("disconnected").innerHTML;
+const RECONNECT_BUTTON=document.getElementById("reconnectPlayer");
 var roomNames=[
   "Let's play!",
   "Poker time!",
@@ -90,6 +92,15 @@ window.onload=function(){
   var roomMsg=document.getElementById("roomMsg");
   var currentName=document.getElementById("playerNameInput");
   var roomNameInput=document.getElementById("roomNameInput");
+  console.log(PLAYER_DISCONNECTED.innerHTML==true);
+  if(PLAYER_DISCONNECTED.innerHTML){
+    RECONNECT_BUTTON.hidden=false;
+    RECONNECT_BUTTON.onclick=function(){
+      var playerName=document.getElementById("playerName").innerHTML;
+      var playerRoom=document.getElementById("roomID").innerHTML;
+      window.location.href="/room"+playerRoom+"/"+playerName;
+    }
+  }
   document.getElementById("chooseName").onclick=function(){
     displayNamePrompt(namePrompt, currentName);
   }

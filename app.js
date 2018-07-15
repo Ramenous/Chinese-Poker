@@ -6,10 +6,14 @@ const serv=require('http').Server(app);
 const socketIO = require('socket.io');
 const session = require('express-session');
 const poker=require('./client/pokerGame.js');
+var io = socketIO(serv);
+const NOT_READY=1;
+const READY=2;
+const DISCONNECTED=3;
+const IN_GAME=4;
 const ROOM_VIEW="room";
 const HOME_VIEW="home";
 const RECONNECT_TIME=30;
-var io = socketIO(serv);
 const DEFAULT_NAMES=[
   "James",
   "Jones",
@@ -26,7 +30,6 @@ const PLAYER_STATUS={
   3:"Disconnected",
   4:"In Game"
 }
-var sessions={};
 var playerSockets={};
 var discPlayers={};
 var players={};
@@ -60,16 +63,9 @@ app.set("views", path.join(__dirname, "/client"));
 app.get("/", function(req, res){
   var currSessionID=req.session.id;
   var player=players[currSessionID];
-  if(sessions[currSessionID]==null){
-    sessions[currSessionID]=currSessionID;
-    res.render(HOME_VIEW);
-  }else{
-    if(player!=null && player.inRoom){
-      res.render(ROOM_VIEW, {roomID: player.roomID, sessionID: currSessionID});
-    }else{
-      res.render(HOME_VIEW);
-    }
-  }
+  var homeViewInfo=(player==null || player.status!=DISCONNECTED)?
+  {disconnected:false}:{disconnected:true, roomID: player.roomID, playerName:player.name};
+  res.render(HOME_VIEW, homeViewInfo);
 });
 
 /*
@@ -127,8 +123,15 @@ function getPlayerHand(socket){
     }
   });
 }
-
+function updatePlayerStatus(roomID, name, status){
+  var dataObj={
+    name:name,
+    status:PLAYER_STATUS[status]
+  };
+  io.to(roomID).emit("updatePlayer", dataObj);
+}
 function startGame(socket, room){
+  console.log("starting game", room.id);
   var players=room.players;
   var roomID=room.id;
   var deck=room.createDeck();
@@ -146,13 +149,6 @@ function startGame(socket, room){
   var index=room.playerTurn;
   io.to(roomID).emit("updateTurn", players[index].name);
   io.to(roomID).emit("startGame");
-}
-function updatePlayerStatus(roomID, name, status){
-  var dataObj={
-    name:name,
-    status:PLAYER_STATUS[status]
-  };
-  io.to(roomID).emit("updatePlayer", dataObj);
 }
 function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
   var selectedRoomID=roomID;
@@ -241,7 +237,7 @@ function validateHand(submittedHand, room, player){
   if(submittedHand.length==4 || submittedHand.length>5 || submittedHand==null) return 2;
   if(!verifyHand(submittedHand, player)) return 3;
   if(!poker.isHigherRanking(submittedHand, room.lastHand)) return 4;
-  if(submittedHand.length!=player.hand.length) return 5;
+  if(submittedHand.length!=room.lastHand.length && room.lastHand.length>0) return 5;
   return 0;
 }
 
@@ -290,11 +286,11 @@ function submitHand(socket){
         io.to(roomID).emit("endGame");
       }
       if(!poker.isHighestCard(handArray)){
-        room.playerTurn=(room.maxPlayers-1==room.playerTurn)?0:room.playerTurn+1;
         room.lastPlayerTurn=room.playerTurn;
+        room.playerTurn=(room.maxPlayers-1==room.playerTurn)?0:room.playerTurn+1;
         room.lastHand=handArray;
       }else{
-        room.lastHand=null;
+        room.lastHand=[];
       }
       io.to(roomID).emit("updatePile", room.lastHand);
       var turn=room.playerTurn;
@@ -309,12 +305,19 @@ function socketDisconnect(socket){
     var id=socket.id;
     var player=playerSockets[id];
     if(player!=null){
-      player.status=3;
       var roomID=player.roomID;
       delete playerSockets[id];
       if(roomID!=null){
-        updatePlayerStatus(roomID,player.name, player.status);
-        discPlayers[player.sessionID]=player;
+        var roomID=player.roomID;
+        var room=rooms[roomID];
+        if(room.startedGame){
+          updatePlayerStatus(roomID,player.name, player.status);
+          player.status=DISCONNECTED;
+          discPlayers[player.sessionID]=player;
+        }else{
+          player.exitRoom();
+          room.removePlayer(player);
+        }
       }
     }
   });
@@ -375,18 +378,19 @@ function getMaster(socket){
 }
 
 function passTurn(socket){
-  socket.on("passTurn", function(data, callback){
-    var room=rooms[data.roomID];
+  socket.on("passTurn", function(data){
+    var roomID=data.roomID;
+    var room=rooms[roomID];
     var player=players[data.playerSession];
     room.playersPassed++;
     if((room.maxPlayers-1)==room.playersPassed){
       room.playerTurn=room.lastPlayerTurn;
-      room.lastHand=null;
+      room.lastHand=[];
       room.playersPassed=0;
     }else{
       room.playerTurn=(room.maxPlayers-1==room.playerTurn)?0:room.playerTurn+1;
     }
-    io.to(room.id).emit("updateTurn", room.players[room.playerTurn].name);
+    io.to(roomID).emit("updateTurn", room.players[room.playerTurn].name);
   });
 }
 
@@ -395,8 +399,8 @@ function readyPlayer(socket){
     var roomID=data.roomID;
     var room=rooms[roomID];
     var player=players[data.playerSession];
-    player.status=(player.status==1)?2:1;
-    (player.status)?room.playersReady++:room.playersReady--;
+    player.status=(player.status==NOT_READY)?READY:NOT_READY;
+    (player.status==READY)?room.playersReady++:room.playersReady--;
     if(room.playersReady==room.maxPlayers && !room.startedGame){
       startGame(socket, room);
     }
@@ -429,8 +433,8 @@ function connectPlayer(socket){
     var sessionID=data.playerSession;
     for(var p in players){
       var player=players[p];
-      if(player.sessionID==sessionID && player.status==3){
-        player.status=(room.startedGame)?4:1;
+      if(player.sessionID==sessionID && player.status==DISCONNECTED){
+        player.status=(room.startedGame)?IN_GAME:NOT_READY;
         player.reconnectTimer=RECONNECT_TIME;
         delete discPlayers[player.sessionID];
         updatePlayerStatus(roomID, player.name, player.status);
@@ -511,6 +515,7 @@ Room=function(id, name, pass, maxPlayers){
   this.maxPlayers=maxPlayers;
   this.players=[];
   this.log=[];
+  this.lastHand=[];
   this.winners=0;
   this.playersReady=0;
   this.playersPassed=0;
@@ -527,7 +532,7 @@ Room=function(id, name, pass, maxPlayers){
     this.winners=0;
     this.playersReady=0;
     this.playersPassed=0;
-    this.lastHand=null;
+    this.lastHand=[];
   }
   this.createDeck=function(){
     var deck=poker.initializeDeck(GAME_TYPE[1]);
