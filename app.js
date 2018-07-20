@@ -236,7 +236,7 @@ function validateHand(submittedHand, room, player){
   if(player.turn!=room.playerTurn) return 1;
   if(submittedHand.length==4 || submittedHand.length>5 || submittedHand==null) return 2;
   if(!verifyHand(submittedHand, player)) return 3;
-  if(!poker.isHigherRanking(submittedHand, room.lastHand)) return 4;
+  if(poker.compareHand(submittedHand, room.lastHand)>0) return 4;
   if(submittedHand.length!=room.lastHand.length && room.lastHand.length>0) return 5;
   return 0;
 }
