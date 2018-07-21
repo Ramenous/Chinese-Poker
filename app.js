@@ -14,6 +14,7 @@ const IN_GAME=4;
 const ROOM_VIEW="room";
 const HOME_VIEW="home";
 const RECONNECT_TIME=30;
+const CHINESE_POKER=1;
 const DEFAULT_NAMES=[
   "James",
   "Jones",
@@ -21,9 +22,6 @@ const DEFAULT_NAMES=[
   "Billiam",
   "Bosef"
 ];
-const GAME_TYPE={
-  1:"ChinesePoker",
-}
 const PLAYER_STATUS={
   1:"Not Ready",
   2:"Ready",
@@ -535,7 +533,7 @@ Room=function(id, name, pass, maxPlayers){
     this.lastHand=[];
   }
   this.createDeck=function(){
-    var deck=poker.initializeDeck(GAME_TYPE[1]);
+    var deck=poker.initializeDeck(CHINESE_POKER);
     poker.shuffleDeck(deck, 5);
     return deck;
   }

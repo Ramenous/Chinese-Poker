@@ -7,10 +7,10 @@ const JACK="J";
 const QUEEN="Q";
 const KING="K";
 const ACE="A";
-const SPADE="Spade";
-const HEART="Heart";
-const CLUB="Club";
-const DIAMOND="Diamond";
+const SPADE="spade";
+const HEART="heart";
+const CLUB="club";
+const DIAMOND="diamond";
 const CHINESE_POKER_RANK_VAL={
   1:3,2:4,3:5,4:6,5:7,6:8,7:9,
   8:10,9:JACK,10:QUEEN,11:KING,12:ACE,13:2
@@ -19,9 +19,7 @@ const CHINESE_POKER_SUIT_VAL={
   1:DIAMOND,2:CLUB,3:HEART,4:SPADE
 }
 const GAME_TYPE={
-  1:function(){
-    return {valueRank:CHINESE_POKER_RANK_VAL, valueSuit:CHINESE_POKER_SUIT_VAL};
-  }
+  1:{valueRank:CHINESE_POKER_RANK_VAL, valueSuit:CHINESE_POKER_SUIT_VAL}
 };
 const CARD_WIDTH=69;
 const CARD_HEIGHT=94;
@@ -73,7 +71,7 @@ const HAND_RANKING={
     return hasSameCardAmount(hand, RANK, 3)?TRIPLE_RANK:-1;
   },
   Pair: function(hand){
-    return sameCardAmount(hand, RANK, 2)?PAIR_RANK:-1;
+    return hasSameCardAmount(hand, RANK, 2)?PAIR_RANK:-1;
   },
   HighCard: function(hand){
     return (hand.length==1)?HIGH_CARD_RANK:-1;
@@ -148,45 +146,61 @@ function getCardDataAmount(hand, dataType){
   return cardCounter;
 }
 
-function getHighRankedCard(hand, type){
-  if(hand.length==5){
-    var cardCounter=getCardDataAmount(hand,RANK);
-    for(var cardRankVal in cardCounter){
-      var amount=cardCounter[cardRankVal];
-      if(type==FOUR_KIND_RANK && amount==4 || amount==3 && type==FULL_HOUSE_RANK)
-        return cardRankVal;
-    }
+function getCardAmountRank(hand, amount){
+  var cardCounter=getCardDataAmount(hand,RANK);
+  for(var cardRankVal in cardCounter){
+    var cardAmount=cardCounter[cardRankVal];
+    if(cardAmount===amount)
+      return cardRankVal;
   }
   return 0;
 }
 
 function hasSameCardAmount(hand, dataType, amount){
-  var cardCounter=getCardDataAmount(dataType);
+  var cardCounter=getCardDataAmount(hand,dataType);
+  console.log("counter", cardCounter);
   for(var cardRank in cardCounter){
-    if(cardCounter[cardRank]==amount) return true;
+    if(cardCounter[cardRank]===amount) return true;
   }
   return false;
 }
 
 function isConsecutive(hand, isRoyalty){
-  var sortedHand=hand.slice(0, hand.length);
-  sortedHand.sort(function(a, b){return a.rankValue-b.rankValue});
-  var len=sortedHand.length-1;
-  for(var i=0; i<len; i++){
-    if((sortedHand[i].rankValue+1)!=sortedHand[i+1].rankValue) return false;
+  if(hand.length==5){
+    var sortedHand=hand.slice(0, hand.length);
+    sortedHand.sort(function(a, b){return a.rankValue-b.rankValue});
+    var len=sortedHand.length-1;
+    for(var i=0; i<len; i++){
+      if((sortedHand[i].rankValue+1)!=sortedHand[i+1].rankValue) return false;
+    }
+    if(isRoyalty){
+      return (sortedHand[0].rank==10 && sortedHand[len].rank==ACE)?true:false;
+    }
+    return true;
   }
-  if(isRoyalty){
-    return (sortedHand[0].rank==10 && sortedHand[len].rank==ACE)?true:false;
-  }
-  return true;
 }
 
-function getHighestRank(hand){
-  var highest=0;
-  for(var card in hand){
-    if(hand[card].rankValue>highest) highest=hand[card].rankValue;
+function getHighestValue(hand, type, returnCardObj){
+  var highestValue=0;
+  var highestCard;
+  for(var c in hand){
+    var card=hand[c];
+    switch(type){
+      case RANK:
+        if(card.rankValue>highestValue){
+          highestValue=card.rankValue;
+          highestCard=card;
+        }
+        break;
+      case SUIT:
+        if(card.suitValue>highestValue){
+          highestValue=card.suitValue;
+          highestCard=card;
+        }
+        break;
+    }
   }
-  return highest;
+  return (returnCardObj)?highestCard:highestValue;
 }
 
 function getHandRanking(hand){
@@ -195,6 +209,7 @@ function getHandRanking(hand){
     var rank=rankingFunc(hand);
     if(rank>0) return rank;
   }
+  return 0;
 }
 
 
@@ -211,39 +226,48 @@ function isHighestCard(hand){
 }
 
 function compareHand(hand1, hand2){
+  console.log("hands:",hand1,hand2);
   var hand1Rank=getHandRanking(hand1);
   var hand2Rank=getHandRanking(hand2);
-  switch(hand1Rank){
-    case ROYAL_FLUSH_RANK:
-      return hand1[0].suitValue - hand2[0].suitValue;
-      break;
-    case STR8_FLUSH_RANK:
-      var result=getHighestRank(hand1) - getHighestRank(hand2);
-      return (result!=0)? result:hand1[0].suitValue - hand2[0].suitValue;
-      break;
-    case FOUR_KIND_RANK:
-      return getHighRankedCard(hand1, FOUR_KIND_RANK) - getHighRankedCard(hand2, FOUR_KIND_RANK);
-      break;
-    case FULL_HOUSE_RANK:
-      return getHighRankedCard(hand1, FULL_HOUSE_RANK) - getHighRankedCard(hand2, FULL_HOUSE_RANK);
-      break;
-    case FLUSH_RANK:
-      var result=hand1[0].suitValue - hand2[0].suitValue;
-      return (result!=0)? result : getHighestRank(hand1) - getHighestRank(hand2);
-      break;
-    case STRAIGHT_RANK:
-      return getHighestRank(hand1) - getHighestRank(hand2);
-      break;
-    case TRIPLE_RANK:
-      return getHighestRank(hand1) - getHighestRank(hand2);
-      break;
-    case PAIR_RANK:
-      return getHighestRank(hand1) - getHighestRank(hand2);
-      break;
-    case HIGH_CARD_RANK:
-      return hand1[0].suitValue-hand2[0].suitValue;
-      break;
+  console.log("rank:", hand1Rank, hand2Rank);
+  if(hand1Rank===hand2Rank){
+    switch(hand1Rank){
+      case ROYAL_FLUSH_RANK:
+        return hand1[0].suitValue - hand2[0].suitValue;
+        break;
+      case STR8_FLUSH_RANK:
+        var result=getHighestValue(hand1, RANK) - getHighestValue(hand2, RANK);
+        return (result!=0)? result:hand1[0].suitValue - hand2[0].suitValue;
+        break;
+      case FOUR_KIND_RANK:
+        return getCardAmountRank(hand1, 4) - getCardAmountRank(hand1, 4);
+        break;
+      case FULL_HOUSE_RANK:
+        return getCardAmountRank(hand1, 3) - getCardAmountRank(hand1, 3);
+        break;
+      case FLUSH_RANK:
+        var result=hand1[0].suitValue - hand2[0].suitValue;
+        return (result!=0)? result : getHighestValue(hand1, RANK) - getHighestValue(hand2, RANK);
+        break;
+      case STRAIGHT_RANK:
+        var hand1HighCard=getHighestValue(hand1, RANK, true);
+        var hand2HighCard=getHighestValue(hand2, RANK, true);
+        var result=hand1HighCard.rankValue-hand2HighCard.rankValue;
+        return (result!=0)?result: hand1HighCard.suitValue-hand2HighCard.suitValue;
+        break;
+      case TRIPLE_RANK:
+        return getHighestValue(hand1, RANK) - getHighestValue(hand2, RANK);
+        break;
+      case PAIR_RANK:
+        var result=getHighestValue(hand1, RANK) - getHighestValue(hand2, RANK);
+        return (result!=0)?result: getHighestValue(hand1, SUIT) - getHighestValue(hand2, SUIT);
+        break;
+      case HIGH_CARD_RANK:
+        return hand1[0].suitValue-hand2[0].suitValue;
+        break;
+    }
   }
+  return hand1Rank - hand2Rank;
 }
 
 Deck = function(){
@@ -255,12 +279,12 @@ Deck = function(){
 
 initializeDeck = function(gameType){
   var deck = new Deck();
+  var gameMapObj=GAME_TYPE[gameType];
+  var rankMap=gameMapObj.valueRank;
+  var suitMap=gameMapObj.valueSuit;
   for(var i=MIN_RANK_VALUE; i<=MAX_RANK_VALUE; i++){
     for(var j=MIN_SUIT_VALUE; j<=MAX_SUIT_VALUE; j++){
-      var gameMapObj=GAME_TYPE[gameType];
-      var rankMap=gameMapObj.valueRank;
-      var suitMap=gameMapObj.valueSuit;
-      var card= new Card(i,j, rankMap[i], suitMap[j]);
+      var card= new Card(rankMap[i], suitMap[j],i,j);
       deck.add(card);
     }
   }
