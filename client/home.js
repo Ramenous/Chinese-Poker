@@ -66,6 +66,7 @@ function createRoomElement(roomInfo){
   roomPlayers.id="roomPlayersInfo";
   roomName.innerHTML=roomInfo.name;
   roomNumber.innerHTML=roomInfo.id;
+  console.log('Players:',roomInfo.players.length,roomInfo.players);
   roomPlayers.innerHTML=roomInfo.players.length+"/"+roomInfo.maxPlayers;
   var room=document.createElement("DIV");
   room.className="room";

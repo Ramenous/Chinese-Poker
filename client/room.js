@@ -32,7 +32,7 @@ const STATUS_COLOR={
   "Not Ready":"red",
   "Ready":"green",
   "Disconnected":"grey",
-  "In game":"green"
+  "In Game":"green"
 }
 const SPACING=25;
 var selectedCards={};
@@ -223,20 +223,7 @@ function displayMsg(message){
   }
 }
 function leaveRoom(){
-  socket.emit("leaveRoom", PLAYER_INFO, function(data){
-    if(data!=null){
-      var players=PLAYER_DATA.children;
-      for(var p in players){
-        var player=players[p];
-        if (player.id==data.player){
-          players.removeChild(player);
-        }
-        if (player.id==data.master){
-          MASTER.innerHTML="Master: "+data.playerName;
-        }
-      }
-    }
-  });
+  socket.emit("leaveRoom", PLAYER_INFO);
   window.location.href="/";
 }
 function passTurn(){
@@ -343,7 +330,10 @@ socket.on("removePlayer", function(data){
   var players=PLAYER_DATA.children;
   for(var p in players){
     var player=players[p];
-    if(data==player.name) PLAYER_DATA.removeChild(player);
+    if(data.player===player.name) PLAYER_DATA.removeChild(player);
+  }
+  if(data.newMaster!=null){
+    MASTER.innerHTML=data.newMaster;
   }
 });
 socket.on("updatePlayerTimers", function(data){

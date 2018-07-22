@@ -129,7 +129,6 @@ function updatePlayerStatus(roomID, name, status){
   io.to(roomID).emit("updatePlayer", dataObj);
 }
 function startGame(socket, room){
-  console.log("starting game", room.id);
   var players=room.players;
   var roomID=room.id;
   var deck=room.createDeck();
@@ -234,7 +233,7 @@ function validateHand(submittedHand, room, player){
   if(player.turn!=room.playerTurn) return 1;
   if(submittedHand.length==4 || submittedHand.length>5 || submittedHand==null) return 2;
   if(!verifyHand(submittedHand, player)) return 3;
-  if(poker.compareHand(submittedHand, room.lastHand)>0) return 4;
+  if(poker.compareHand(submittedHand, room.lastHand)<=0) return 4;
   if(submittedHand.length!=room.lastHand.length && room.lastHand.length>0) return 5;
   return 0;
 }
@@ -248,9 +247,7 @@ function reconnectCountDown(){
     player.reconnectTimer--;
     if(player.reconnectTimer==0){
       delete discPlayers[player.sessionID];
-      room.removePlayer(player);
-      player.exitRoom();
-      io.to(roomID).emit("removePlayer",player.name);
+      removePlayerFromRoom(player,room);
     }else{
       playerTimes.push({name:player.name, time:player.reconnectTimer});
     }
@@ -308,13 +305,13 @@ function socketDisconnect(socket){
       if(roomID!=null){
         var roomID=player.roomID;
         var room=rooms[roomID];
+        console.log("disconnecting...");
         if(room.startedGame){
           updatePlayerStatus(roomID,player.name, player.status);
           player.status=DISCONNECTED;
           discPlayers[player.sessionID]=player;
         }else{
-          player.exitRoom();
-          room.removePlayer(player);
+          removePlayerFromRoom(player,room);
         }
       }
     }
@@ -356,16 +353,19 @@ function getPlayers(socket){
     callback({players:playerInfos, startedGame:room.startedGame});
   });
 }
-
+function removePlayerFromRoom(player,room){
+  var newMaster=room.removePlayer(player);
+  player.exitRoom();
+  io.to(room.id).emit("removePlayer",{
+    newMaster:(newMaster!=null)?newMaster.name:null,
+    player:player.name
+  });
+}
 function leaveRoom(socket){
-  socket.on("leaveRoom", function(data, callback){
+  socket.on("leaveRoom", function(data){
     var player=players[data.playerSession];
     var room=rooms[data.roomID];
-    var master=room.removePlayer(player);
-    player.exitRoom();
-    if(master!=null){
-      callback({master:master.name, player:player.name});
-    }
+    removePlayerFromRoom(player,room);
   });
 }
 
@@ -543,7 +543,7 @@ Room=function(id, name, pass, maxPlayers){
   this.removePlayer=function(player){
     var players=this.players;
     for(var p in players){
-      if(players[p].sessionID==player.sessionID) players.splice[p];
+      if(players[p].sessionID===player.sessionID) players.splice(p,1);
     }
     if(players.length==0){
       delete rooms[this.id];

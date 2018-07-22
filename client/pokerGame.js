@@ -50,31 +50,34 @@ const RANK="rank";
 const SUIT="suit";
 const HAND_RANKING={
   RoyalFlush: function(hand){
-    return (hasSameCardAmount(hand, SUIT, 5) && isConsecutive(hand,true))?ROYAL_FLUSH_RANK:-1;
+    return (hasSameCardAmount(hand, SUIT, 5) &&
+    isConsecutive(hand,true)&& hand.length==5)?ROYAL_FLUSH_RANK:-1;
   },
   StraightFlush: function(hand){
-    return (hasSameCardAmount(hand, SUIT, 5) && isConsecutive(hand))?STR8STR8_FLUSH_RANK:-1;
+    return (hasSameCardAmount(hand, SUIT, 5) && isConsecutive(hand)&&
+     hand.length==5)?STR8STR8_FLUSH_RANK:-1;
   },
   FourOfAKind: function(hand){
-    return hasSameCardAmount(hand,RANK, 4) ?FOUR_KIND_RANK:-1;
+    return hasSameCardAmount(hand,RANK, 4)&& hand.length==5 ?FOUR_KIND_RANK:-1;
   },
   FullHouse: function(hand){
-    return hasSameCardAmount(hand, RANK, 3) && hasSameCardAmount(hand, RANK, 2)?FULL_HOUSE_RANK:-1;
+    return hasSameCardAmount(hand, RANK, 3) &&
+    hasSameCardAmount(hand, RANK, 2) && hand.length==5?FULL_HOUSE_RANK:-1;
   },
   Flush:function(hand){
-    return hasSameCardAmount(hand, SUIT,5)?FLUSH_RANK:-1;
+    return hasSameCardAmount(hand, SUIT,5)&& hand.length==5?FLUSH_RANK:-1;
   },
   Straight: function(hand){
-    return isConsecutive(hand)?STRAIGHT_RANK:-1;
+    return (isConsecutive(hand) && hand.length==5)?STRAIGHT_RANK:-1;
   },
   Triple: function(hand){
-    return hasSameCardAmount(hand, RANK, 3)?TRIPLE_RANK:-1;
+    return (hasSameCardAmount(hand, RANK, 3) && hand.length==3)?TRIPLE_RANK:-1;
   },
   Pair: function(hand){
-    return hasSameCardAmount(hand, RANK, 2)?PAIR_RANK:-1;
+    return (hasSameCardAmount(hand, RANK, 2) && hand.length==2)?PAIR_RANK:-1;
   },
   HighCard: function(hand){
-    return (hand.length==1)?HIGH_CARD_RANK:-1;
+    return (hand.length==1)?hand[0].rankValue:-1;
   }
 };
 const SHUFFLE_METHOD={
@@ -166,18 +169,16 @@ function hasSameCardAmount(hand, dataType, amount){
 }
 
 function isConsecutive(hand, isRoyalty){
-  if(hand.length==5){
-    var sortedHand=hand.slice(0, hand.length);
-    sortedHand.sort(function(a, b){return a.rankValue-b.rankValue});
-    var len=sortedHand.length-1;
-    for(var i=0; i<len; i++){
-      if((sortedHand[i].rankValue+1)!=sortedHand[i+1].rankValue) return false;
-    }
-    if(isRoyalty){
-      return (sortedHand[0].rank==10 && sortedHand[len].rank==ACE)?true:false;
-    }
-    return true;
+  var sortedHand=hand.slice(0, hand.length);
+  sortedHand.sort(function(a, b){return a.rankValue-b.rankValue});
+  var len=sortedHand.length-1;
+  for(var i=0; i<len; i++){
+    if((sortedHand[i].rankValue+1)!=sortedHand[i+1].rankValue) return false;
   }
+  if(isRoyalty){
+    return (sortedHand[0].rank==10 && sortedHand[len].rank==ACE)?true:false;
+  }
+  return true;
 }
 
 function getHighestValue(hand, type, returnCardObj){
@@ -226,11 +227,10 @@ function isHighestCard(hand){
 }
 
 function compareHand(hand1, hand2){
-  console.log("hands:",hand1,hand2);
   var hand1Rank=getHandRanking(hand1);
   var hand2Rank=getHandRanking(hand2);
-  console.log("rank:", hand1Rank, hand2Rank);
-  if(hand1Rank===hand2Rank){
+  console.log("ranks",hand1Rank, hand2Rank);
+  if(hand1Rank===hand2Rank && hand1.length>1 && hand2.length>1){
     switch(hand1Rank){
       case ROYAL_FLUSH_RANK:
         return hand1[0].suitValue - hand2[0].suitValue;
@@ -262,12 +262,9 @@ function compareHand(hand1, hand2){
         var result=getHighestValue(hand1, RANK) - getHighestValue(hand2, RANK);
         return (result!=0)?result: getHighestValue(hand1, SUIT) - getHighestValue(hand2, SUIT);
         break;
-      case HIGH_CARD_RANK:
-        return hand1[0].suitValue-hand2[0].suitValue;
-        break;
     }
   }
-  return hand1Rank - hand2Rank;
+  return (hand1Rank===hand2Rank)?hand1[0].suitValue-hand2[0].suitValue:hand1Rank - hand2Rank;
 }
 
 Deck = function(){
