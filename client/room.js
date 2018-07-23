@@ -196,6 +196,11 @@ function modifyPlayerStatus(name, status){
   statusEl.style.color=STATUS_COLOR[status];
   statusEl.innerHTML=status;
 }
+function updatePlayerCardAmount(name, amount){
+  var playerEl=getPlayerElement(name);
+  var cardAmountEl=getChildById(playerEl, name+"cards");
+  cardAmountEl.innerHTML=amount;
+}
 function updatePlayerTime(name, time){
   var playerEl=getPlayerElement(name);
   var timeEl=getChildById(playerEl, name+"time");
@@ -298,7 +303,7 @@ socket.emit("getMaster", ROOM,function(data){
   MASTER.innerHTML="Master: "+data;
 });
 socket.on("updateReadyStatus", function(data){
-  modifyPlayerStatus(data.name, data.status, data.startedGame);
+  modifyPlayerStatus(data.name, data.status);
 });
 socket.on("distributeHand", function(data){
   obtainHand(data);
@@ -325,6 +330,7 @@ socket.on("addPlayer", function(data){
 });
 socket.on("updatePlayer", function(data){
   modifyPlayerStatus(data.name, data.status);
+  updatePlayerCardAmount(data.name, data.cardAmount);
 });
 socket.on("removePlayer", function(data){
   var players=PLAYER_DATA.children;
@@ -333,7 +339,7 @@ socket.on("removePlayer", function(data){
     if(data.player===player.name) PLAYER_DATA.removeChild(player);
   }
   if(data.newMaster!=null){
-    MASTER.innerHTML=data.newMaster;
+    MASTER.innerHTML="Master: "+data.newMaster;
   }
 });
 socket.on("updatePlayerTimers", function(data){

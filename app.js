@@ -121,10 +121,11 @@ function getPlayerHand(socket){
     }
   });
 }
-function updatePlayerStatus(roomID, name, status){
+function updatePlayerStatus(roomID, player){
   var dataObj={
-    name:name,
-    status:PLAYER_STATUS[status]
+    name:player.name,
+    status:PLAYER_STATUS[player.status],
+    cardAmount:player.hand.length
   };
   io.to(roomID).emit("updatePlayer", dataObj);
 }
@@ -138,7 +139,7 @@ function startGame(socket, room){
     var player=players[p];
     player.status=4;
     var socketID=player.socketID;
-    updatePlayerStatus(roomID, player.name, player.status);
+    updatePlayerStatus(roomID, player);
     //Using socket ID because each player's hand is unique
     if(socketID!=null)
       io.to(socketID).emit("distributeHand", player.hand);
@@ -181,7 +182,7 @@ function routeRoom(name,roomID, socket, roomName, roomPass, numOfPlayers){
       player.status=(room.startedGame)?3:1;
       msg=[roomEvent(name, roomID, 2)];
       correctRoom.addRoomMessage(msg);
-      updatePlayerStatus(roomID, player.name, player.status);
+      updatePlayerStatus(roomID, player);
     }
     io.to(roomID).emit("updateLog", msg);
     res.render(ROOM_VIEW, {roomID: selectedRoomID, sessionID: currSessionID});
@@ -307,8 +308,8 @@ function socketDisconnect(socket){
         var room=rooms[roomID];
         console.log("disconnecting...");
         if(room.startedGame){
-          updatePlayerStatus(roomID,player.name, player.status);
           player.status=DISCONNECTED;
+          updatePlayerStatus(roomID,player);
           discPlayers[player.sessionID]=player;
         }else{
           removePlayerFromRoom(player,room);
@@ -402,7 +403,7 @@ function readyPlayer(socket){
     if(room.playersReady==room.maxPlayers && !room.startedGame){
       startGame(socket, room);
     }
-    io.to(roomID).emit("updateReadyStatus", {name:player.name, status:PLAYER_STATUS[player.status], startedGame:room.startedGame});
+    io.to(roomID).emit("updateReadyStatus", {name:player.name, status:PLAYER_STATUS[player.status]});
     callback(player.status);
   });
 }
@@ -435,7 +436,7 @@ function connectPlayer(socket){
         player.status=(room.startedGame)?IN_GAME:NOT_READY;
         player.reconnectTimer=RECONNECT_TIME;
         delete discPlayers[player.sessionID];
-        updatePlayerStatus(roomID, player.name, player.status);
+        updatePlayerStatus(roomID, player);
         io.to(roomID).emit("updatePlayerTimers", [{name:player.name}]);
       }
     }
@@ -482,7 +483,7 @@ Player=function(name, sessionID, roomID){
   this.exitRoom=function(){
     this.inRoom=false;
     this.isMaster=false;
-    this.status=0;
+    this.status=1;
     this.winner=false;
     this.reconnectTimer=RECONNECT_TIME;
     delete this.roomID;
@@ -550,8 +551,11 @@ Room=function(id, name, pass, maxPlayers){
     }
     if(player.isMaster){
       var newMaster=players[0];
-      newMaster.isMaster=true;
-      return newMaster;
+      if(newMaster!=null){
+        this.master=newMaster;
+        newMaster.isMaster=true;
+        return newMaster;
+      }
     }
   }
   this.kickPlayer=function(){
